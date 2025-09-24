@@ -6,8 +6,8 @@ app_name = 'core'
 
 urlpatterns = [
     path('', views.LandingPageView.as_view(), name='landing'),
-    path('register/', views.RegisterView.as_view(), name='register'),
-    path('login/', auth_views.LoginView.as_view(template_name='core/login.html'), name='login'),
+    path('auth/login/', views.modal_login_view, name='modal_login'),
+    path('auth/register/', views.modal_register_view, name='modal_register'),
     path('logout/', views.logout_view, name='logout'),
     path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
     path('profile/', views.ProfileView.as_view(), name='profile'),

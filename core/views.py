@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView, CreateView, ListView
@@ -8,6 +8,8 @@ from django.db.models import Count, Avg
 from django.utils import timezone
 from django.urls import reverse_lazy
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 from datetime import timedelta
 from .models import User, MoodEntry
 from .forms import CustomUserCreationForm, MoodEntryForm, UserProfileForm
@@ -148,3 +150,54 @@ class MoodHistoryView(LoginRequiredMixin, ListView):
 def logout_view(request):
     logout(request)
     return redirect('core:landing')
+
+@require_http_methods(["POST"])
+def modal_login_view(request):
+    """Handle login from modal form"""
+    username = request.POST.get('username')
+    password = request.POST.get('password')
+    
+    if username and password:
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return JsonResponse({
+                'success': True, 
+                'message': 'Login successful!',
+                'redirect_url': reverse_lazy('core:dashboard')
+            })
+        else:
+            return JsonResponse({
+                'success': False, 
+                'message': 'Invalid username or password.'
+            })
+    else:
+        return JsonResponse({
+            'success': False, 
+            'message': 'Please fill in all fields.'
+        })
+
+@require_http_methods(["POST"])
+def modal_register_view(request):
+    """Handle registration from modal form"""
+    form = CustomUserCreationForm(request.POST)
+    
+    if form.is_valid():
+        user = form.save()
+        login(request, user)
+        return JsonResponse({
+            'success': True, 
+            'message': 'Registration successful! Welcome to FriendofMind.',
+            'redirect_url': reverse_lazy('core:dashboard')
+        })
+    else:
+        # Return form errors
+        errors = {}
+        for field, field_errors in form.errors.items():
+            errors[field] = field_errors[0] if field_errors else ''
+        
+        return JsonResponse({
+            'success': False, 
+            'message': 'Please correct the errors below.',
+            'errors': errors
+        })
