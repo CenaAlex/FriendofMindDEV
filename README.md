@@ -17,8 +17,8 @@ A comprehensive mental health screening and support platform designed specifical
 - Personal statistics and insights
 - Mood logging functionality
 
-### 🏥 Professional Directory
-- Verified mental health professionals across the Philippines
+### 🏥 Organization Directory
+- Verified mental health organizations across the Philippines
 - Detailed profiles with specializations, contact info, and fees
 - Search and filter by location, specialty, and availability
 - Telehealth options available
@@ -54,23 +54,26 @@ A comprehensive mental health screening and support platform designed specifical
 
 1. **Clone and setup**:
    ```bash
-   cd C:\Users\Stephanie\Desktop\FriendOfMind
-   # Virtual environment is already set up
+   git clone https://github.com/CenaAlex/FriendofMindDEV.git
+   cd FriendofMindDEV
    ```
 
-2. **Install dependencies**:
+2. **Create virtual environment**:
+   ```bash
+   python -m venv venv
+   venv\Scripts\activate  # Windows
+   # or
+   source venv/bin/activate  # Linux/Mac
+   ```
+
+3. **Install dependencies**:
    ```bash
    pip install django psycopg2-binary pillow
    ```
 
-3. **Run migrations**:
+4. **Run migrations**:
    ```bash
    python manage.py migrate
-   ```
-
-4. **Populate sample data**:
-   ```bash
-   python populate_data.py
    ```
 
 5. **Create superuser** (optional):
@@ -94,12 +97,12 @@ A comprehensive mental health screening and support platform designed specifical
 2. **Take Assessments**: Complete PHQ-9, GAD-7, or PSS screenings
 3. **View Results**: Get instant feedback and recommendations
 4. **Track Progress**: Log daily moods and monitor trends
-5. **Find Help**: Browse professional directory and resources
+5. **Find Help**: Browse organization directory and resources
 6. **Self-Care**: Access guided exercises and educational content
 
 ### For Administrators
 1. **Access Admin Panel**: Login at `/admin/` with superuser credentials
-2. **Manage Resources**: Add/edit mental health resources and professionals
+2. **Manage Resources**: Add/edit mental health resources and organizations
 3. **Monitor Assessments**: View user assessment results and trends
 4. **Content Management**: Update educational materials and exercises
 
@@ -120,7 +123,7 @@ A comprehensive mental health screening and support platform designed specifical
 ### Resource Models
 - **ResourceCategory**: Organization categories for mental health resources
 - **MentalHealthResource**: Articles, hotlines, and educational materials
-- **ProfessionalContact**: Licensed mental health professionals
+- **ProfessionalContact**: Licensed mental health organizations
 - **SelfHelpExercise**: Guided self-care activities
 
 ## Security & Privacy
@@ -145,7 +148,7 @@ A comprehensive mental health screening and support platform designed specifical
 - Mild to moderate mental health concerns
 - Early intervention and awareness
 - Educational and supportive resources
-- Connection to professional help
+- Connection to organizational help
 
 ### Limitations
 - Not a replacement for professional diagnosis or treatment
@@ -174,4 +177,4 @@ This project is developed for educational and research purposes. All mental heal
 
 ## Disclaimer
 
-This platform is for informational and educational purposes only. It is not intended to diagnose, treat, cure, or prevent any mental health condition. Always consult with qualified mental health professionals for proper diagnosis and treatment. In case of emergency, contact local emergency services or crisis hotlines immediately.
+This platform is for informational and educational purposes only. It is not intended to diagnose, treat, cure, or prevent any mental health condition. Always consult with qualified mental health organizations for proper diagnosis and treatment. In case of emergency, contact local emergency services or crisis hotlines immediately.
