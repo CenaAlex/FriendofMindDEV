@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Mental Health Resources - FriendofMind{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">Mental Health Resources</h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+            Discover a comprehensive collection of mental health resources, from crisis support to self-help materials, 
+            all designed to support your mental wellness journey.
+        </p>
+    </div>
+
+    <!-- Categories Filter -->
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold mb-4">Browse by Category</h2>
+        <div class="flex flex-wrap gap-3">
+            <a href="{% url 'mentalhealth:resource_list' %}" 
+               class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition duration-200 {% if not current_category %}bg-primary text-white{% endif %}">
+                All Resources
+            </a>
+            {% for category in categories %}
+            <a href="{% url 'mentalhealth:resource_by_category' category.id %}" 
+               class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition duration-200 {% if current_category.id == category.id %}bg-primary text-white{% endif %}">
+                <i class="{{ category.icon }} mr-2"></i>{{ category.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Current Category Info -->
+    {% if current_category %}
+    <div class="mb-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border">
+        <div class="flex items-center mb-2">
+            <i class="{{ current_category.icon }} text-2xl mr-3" style="color: {{ current_category.color }}"></i>
+            <h2 class="text-2xl font-bold text-gray-900">{{ current_category.name }}</h2>
+        </div>
+        <p class="text-gray-600">{{ current_category.description }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Resources Grid -->
+    {% if resources %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for resource in resources %}
+        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition duration-300 p-6">
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ resource.title }}</h3>
+                    <span class="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                        {{ resource.get_resource_type_display }}
+                    </span>
+                </div>
+                {% if resource.is_verified %}
+                <div class="flex-shrink-0">
+                    <i class="fas fa-check-circle text-green-500" title="Verified Resource"></i>
+                </div>
+                {% endif %}
+            </div>
+            
+            <p class="text-gray-600 text-sm mb-4">{{ resource.description|truncatewords:25 }}</p>
+            
+            <div class="space-y-2 mb-4">
+                {% if resource.phone_number %}
+                <div class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-phone mr-2"></i>
+                    <span>{{ resource.phone_number }}</span>
+                    {% if resource.is_24_7 %}
+                        <span class="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">24/7</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% if resource.email %}
+                <div class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-envelope mr-2"></i>
+                    <span>{{ resource.email }}</span>
+                </div>
+                {% endif %}
+                
+                {% if resource.is_free %}
+                <div class="flex items-center text-sm text-green-600">
+                    <i class="fas fa-check mr-2"></i>
+                    <span>Free</span>
+                </div>
+                {% endif %}
+                
+                <div class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-globe mr-2"></i>
+                    <span>{{ resource.languages_supported }}</span>
+                </div>
+            </div>
+            
+            <div class="flex space-x-2">
+                {% if resource.url %}
+                <a href="{{ resource.url }}" target="_blank" 
+                   class="flex-1 bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-center text-sm transition duration-200">
+                    <i class="fas fa-external-link-alt mr-1"></i>Visit Resource
+                </a>
+                {% endif %}
+                
+                {% if resource.phone_number %}
+                <a href="tel:{{ resource.phone_number }}" 
+                   class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-center text-sm transition duration-200">
+                    <i class="fas fa-phone mr-1"></i>Call
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="mt-8 flex justify-center">
+        <nav class="flex space-x-2">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg">Previous</a>
+            {% endif %}
+            
+            <span class="px-3 py-2 bg-primary text-white rounded-lg">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg">Next</a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-12">
+        <i class="fas fa-search text-gray-400 text-4xl mb-4"></i>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No resources found</h3>
+        <p class="text-gray-600">Try browsing a different category or check back later for new resources.</p>
+    </div>
+    {% endif %}
+
+    <!-- Crisis Support Banner -->
+    <div class="mt-12 bg-red-50 border border-red-200 rounded-lg p-6">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-lg font-medium text-red-800 mb-2">Crisis Support Available 24/7</h3>
+                <div class="text-sm text-red-700 space-y-1">
+                    <p><strong>National Suicide Prevention Lifeline:</strong> <a href="tel:988" class="underline font-semibold">988</a></p>
+                    <p><strong>Crisis Text Line:</strong> Text HOME to <a href="sms:741741" class="underline font-semibold">741741</a></p>
+                    <p><strong>SAMHSA National Helpline:</strong> <a href="tel:1-800-662-4357" class="underline font-semibold">1-800-662-4357</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

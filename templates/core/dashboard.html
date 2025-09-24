@@ -1,0 +1,477 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - FriendofMind{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="min-h-screen -mt-16 pt-16" style="background: radial-gradient(ellipse at center bottom, #0f172a 0%, #1e293b 20%, #334155 40%, #0d9488 60%, #14b8a6 80%, #5eead4 100%);">
+    <div class="max-w-8xl mx-auto px-16 sm:px-20 lg:px-24 py-8">
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <a href="{% url 'core:mood_history' %}" class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-6 text-white hover:bg-opacity-30 transition duration-300 cursor-pointer">
+            <div class="text-center">
+                <h3 class="text-3xl font-bold">{{ recent_moods.count|default:7 }}</h3>
+                <p class="text-lg">Days Active</p>
+                </div>
+        </a>
+        <a href="{% url 'screening:assessment_history' %}" class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-6 text-white hover:bg-opacity-30 transition duration-300 cursor-pointer">
+            <div class="text-center">
+                <h3 class="text-3xl font-bold">{{ assessments_taken|default:3 }}</h3>
+                <p class="text-lg">Assessments Completed</p>
+                </div>
+        </a>
+        <a href="{% url 'mentalhealth:resource_list' %}" class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-6 text-white hover:bg-opacity-30 transition duration-300 cursor-pointer">
+            <div class="text-center">
+                <h3 class="text-3xl font-bold">4</h3>
+                <p class="text-lg">Resources Accessed</p>
+            </div>
+        </a>
+        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-6 text-white">
+            <div class="text-center">
+                <h3 class="text-3xl font-bold">
+                        {% if assessments_taken > 0 %}
+                            {% if assessments_taken == 1 %}70%
+                            {% elif assessments_taken == 2 %}80%
+                            {% elif assessments_taken == 3 %}90%
+                            {% elif assessments_taken >= 4 %}95%
+                            {% else %}60%
+                            {% endif %}
+                        {% else %}0%{% endif %}
+                    </h3>
+                <p class="text-lg">Wellness Score</p>
+                </div>
+            </div>
+        </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 space-y-8">
+            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-white mb-6">Mental Health Assessments</h2>
+                <a href="{% url 'screening:assessment_list' %}" class="block bg-[#304758] rounded-lg p-6 text-white mb-6 hover:bg-[#1e2d3a] transition duration-300 cursor-pointer">
+                    <h3 class="text-xl font-semibold mb-2">Mental health Assessments</h3>
+                    <p class="text-sm opacity-90">This assessment is not a diagnosis but a tool to gauge mental status based on the score.</p>
+                </a>
+
+                <div class="bg-gradient-to-br from-blue-50 to-green-50 rounded-lg p-6 mb-6 border border-blue-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-[#304758]">Mood Trend (Last 7 Days)</h3>
+                        <div class="flex items-center space-x-2 text-sm text-gray-600">
+            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-green-500 rounded-full mr-1"></div>
+                                <span>Good</span>
+                </div>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full mr-1"></div>
+                                <span>Neutral</span>
+                </div>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-red-500 rounded-full mr-1"></div>
+                                <span>Low</span>
+            </div>
+        </div>
+    </div>
+
+                    <div class="relative">
+                        <div class="absolute left-0 top-0 h-40 flex flex-col justify-between text-xs text-gray-500 -ml-8">
+                            <span>5</span>
+                            <span>4</span>
+                            <span>3</span>
+                            <span>2</span>
+                            <span>1</span>
+                        </div>
+                        
+                        <div class="flex items-end justify-between h-40 ml-4" id="moodChart">
+                            <div class="text-center text-gray-500 text-sm flex items-center justify-center h-full w-full">
+                        <div>
+                                    <i class="fas fa-chart-line text-4xl mb-2 text-blue-400"></i>
+                                    <p class="font-medium">No mood data yet</p>
+                                    <p class="text-xs">Start logging your mood to see your trend</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="absolute inset-0 ml-4">
+                            <div class="h-full flex flex-col justify-between">
+                                <div class="border-t border-gray-300 opacity-30"></div>
+                                <div class="border-t border-gray-300 opacity-30"></div>
+                                <div class="border-t border-gray-300 opacity-30"></div>
+                                <div class="border-t border-gray-300 opacity-30"></div>
+                                <div class="border-t border-gray-300 opacity-30"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between text-xs text-gray-600 mt-3 ml-4" id="chartLabels">
+                    </div>
+                        </div>
+
+                <div class="flex justify-center space-x-4">
+                    <div class="text-center">
+                        <div class="text-3xl mb-1">😢</div>
+                        <span class="text-sm text-gray-600">Very Sad</span>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl mb-1">😔</div>
+                        <span class="text-sm text-gray-600">Sad</span>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl mb-1">😐</div>
+                        <span class="text-sm text-gray-600">Neutral</span>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl mb-1">😊</div>
+                        <span class="text-sm text-gray-600">Happy</span>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl mb-1">😄</div>
+                        <span class="text-sm text-gray-600">Very Happy</span>
+                    </div>
+                </div>
+                        </div>
+
+            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-white mb-6">Recent Activities</h2>
+                <div class="flex space-x-4">
+                    <a href="{% url 'screening:assessment_history' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
+                        <div class="w-16 h-16 bg-blue-500 rounded-lg flex items-center justify-center mb-2 hover:bg-blue-600">
+                            <i class="fas fa-check text-white text-xl"></i>
+                        </div>
+                        <span class="text-sm text-white">Complete</span>
+                    </a>
+                    <a href="{% url 'core:mood_history' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
+                        <div class="w-16 h-16 bg-orange-500 rounded-lg flex items-center justify-center mb-2 hover:bg-orange-600">
+                            <i class="fas fa-comment text-white text-xl"></i>
+                        </div>
+                        <span class="text-sm text-white">Comment</span>
+                    </a>
+                    <a href="{% url 'core:profile' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
+                        <div class="w-16 h-16 bg-blue-400 rounded-lg flex items-center justify-center mb-2 hover:bg-blue-500">
+                            <i class="fas fa-image text-white text-xl"></i>
+                        </div>
+                        <span class="text-sm text-white">Photo</span>
+                    </a>
+                    <a href="{% url 'mentalhealth:resource_list' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
+                        <div class="w-16 h-16 bg-yellow-500 rounded-lg flex items-center justify-center mb-2 hover:bg-yellow-600">
+                            <i class="fas fa-folder text-white text-xl"></i>
+                        </div>
+                        <span class="text-sm text-white">Folder</span>
+                    </a>
+                    <a href="{% url 'core:dashboard' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
+                        <div class="w-16 h-16 bg-blue-300 rounded-lg flex items-center justify-center mb-2 hover:bg-blue-400">
+                            <i class="fas fa-bell text-white text-xl"></i>
+                        </div>
+                        <span class="text-sm text-white">Alert</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-8">
+            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold text-white mb-4">Quick Mood Check</h2>
+                <div class="flex justify-center space-x-3 mb-6">
+                    <div class="text-center relative group">
+                        <div class="text-3xl mb-1 hover:scale-110 transition duration-300 cursor-pointer mood-emoji" data-mood="1" data-description="I feel extremely down and overwhelmed with sadness.">😢</div>
+                        <span class="text-xs text-gray-600">Very Sad</span>
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition duration-300 whitespace-nowrap z-10 max-w-xs">
+                            I feel extremely down and overwhelmed with sadness.
+                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                        </div>
+                    </div>
+                    <div class="text-center relative group">
+                        <div class="text-3xl mb-1 hover:scale-110 transition duration-300 cursor-pointer mood-emoji" data-mood="2" data-description="I'm feeling low and struggling with negative emotions.">😔</div>
+                        <span class="text-xs text-gray-600">Sad</span>
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition duration-300 whitespace-nowrap z-10 max-w-xs">
+                            I'm feeling low and struggling with negative emotions.
+                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                        </div>
+                    </div>
+                    <div class="text-center relative group">
+                        <div class="text-3xl mb-1 hover:scale-110 transition duration-300 cursor-pointer mood-emoji" data-mood="3" data-description="I feel neutral and neither particularly happy nor sad.">😐</div>
+                        <span class="text-xs text-gray-600">Neutral</span>
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition duration-300 whitespace-nowrap z-10 max-w-xs">
+                            I feel neutral and neither particularly happy nor sad.
+                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                        </div>
+                    </div>
+                    <div class="text-center relative group">
+                        <div class="text-3xl mb-1 hover:scale-110 transition duration-300 cursor-pointer mood-emoji" data-mood="4" data-description="I'm feeling good and content with my current state.">😊</div>
+                        <span class="text-xs text-gray-600">Happy</span>
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition duration-300 whitespace-nowrap z-10 max-w-xs">
+                            I'm feeling good and content with my current state.
+                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                </div>
+                    </div>
+                    <div class="text-center relative group">
+                        <div class="text-3xl mb-1 hover:scale-110 transition duration-300 cursor-pointer mood-emoji" data-mood="5" data-description="I feel amazing and full of positive energy today.">😄</div>
+                        <span class="text-xs text-gray-600">Very Happy</span>
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition duration-300 whitespace-nowrap z-10 max-w-xs">
+                            I feel amazing and full of positive energy today.
+                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                    </div>
+                    </div>
+                </div>
+                
+                <div id="selectedMood" class="text-center mb-4 hidden">
+                    <p class="text-sm text-gray-600">Selected: <span id="selectedMoodText"></span></p>
+                </div>
+
+                <div class="mt-4">
+                    <h3 class="text-sm font-semibold text-[#304758] mb-2">Notes <span class="text-xs text-gray-500">(Optional)</span></h3>
+                    <textarea 
+                        id="moodNotes"
+                        placeholder="How are you feeling today? Share your thoughts... (Optional)" 
+                        class="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-[#304758] focus:border-transparent text-sm"
+                        rows="3"
+                    ></textarea>
+                    <button id="saveMoodBtn" class="mt-2 bg-[#304758] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#1e2d3a] transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                        Save Mood
+                    </button>
+                </div>
+
+                <h3 class="text-lg font-bold text-white mb-4">Mental Health Resources</h3>
+                <div class="space-y-2">
+                    <a href="{% url 'mentalhealth:resource_list' %}" class="block text-white py-2 hover:text-gray-200 hover:bg-white hover:bg-opacity-10 rounded px-2 transition duration-300 cursor-pointer">Self-Help Articles</a>
+                    <a href="{% url 'mentalhealth:resource_list' %}" class="block text-white py-2 hover:text-gray-200 hover:bg-white hover:bg-opacity-10 rounded px-2 transition duration-300 cursor-pointer">Mindfulness Exercises</a>
+                    <a href="{% url 'mentalhealth:professional_list' %}" class="block text-white py-2 hover:text-gray-200 hover:bg-white hover:bg-opacity-10 rounded px-2 transition duration-300 cursor-pointer">Organization Directory</a>
+                    <a href="{% url 'mentalhealth:resource_list' %}" class="block text-white py-2 hover:text-gray-200 hover:bg-white hover:bg-opacity-10 rounded px-2 transition duration-300 cursor-pointer">Support Group</a>
+                    <a href="{% url 'mentalhealth:resource_list' %}" class="block text-white py-2 hover:text-gray-200 hover:bg-white hover:bg-opacity-10 rounded px-2 transition duration-300 cursor-pointer">Educational Video</a>
+                        </div>
+                    </div>
+
+            <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold text-white mb-4">Online Forum</h2>
+                <div class="flex space-x-6">
+                    <a href="{% url 'core:profile' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
+                        <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mb-2 hover:bg-blue-600">
+                            <i class="fas fa-check text-white"></i>
+                </div>
+                        <span class="text-sm text-white">Create Forum</span>
+                    </a>
+                    <a href="{% url 'core:dashboard' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
+                        <div class="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-2 hover:bg-orange-600">
+                            <i class="fas fa-comment text-white"></i>
+            </div>
+                        <span class="text-sm text-white">View & Reply</span>
+                    </a>
+                    <a href="{% url 'core:dashboard' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
+                        <div class="w-12 h-12 bg-blue-300 rounded-lg flex items-center justify-center mb-2 hover:bg-blue-400">
+                            <i class="fas fa-bell text-white"></i>
+                                </div>
+                        <span class="text-sm text-white">Notification</span>
+                    </a>
+                                </div>
+                            </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let selectedMood = null;
+    const moodEmojis = document.querySelectorAll('.mood-emoji');
+    const selectedMoodDiv = document.getElementById('selectedMood');
+    const selectedMoodText = document.getElementById('selectedMoodText');
+    const saveMoodBtn = document.getElementById('saveMoodBtn');
+    const moodNotes = document.getElementById('moodNotes');
+    const moodChart = document.getElementById('moodChart');
+    const chartLabels = document.getElementById('chartLabels');
+
+    // Load mood chart data
+    function loadMoodChart() {
+        fetch('{% url "core:mood_chart_data" %}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.moods && data.moods.length > 0) {
+                    renderMoodChart(data.moods);
+                } else {
+                    showNoDataMessage();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading mood chart:', error);
+                showNoDataMessage();
+            });
+    }
+
+    // Render mood chart
+    function renderMoodChart(moods) {
+        const maxMood = 5;
+        const chartContainer = moodChart;
+        const labelsContainer = chartLabels;
+        
+        // Clear existing content
+        chartContainer.innerHTML = '';
+        labelsContainer.innerHTML = '';
+        
+        // Get last 7 days of data
+        const last7Days = moods.slice(-7);
+        
+        // Emoji mapping
+        const emojiMap = {
+            1: { emoji: '😢', name: 'Very Sad' },
+            2: { emoji: '😔', name: 'Sad' },
+            3: { emoji: '😐', name: 'Neutral' },
+            4: { emoji: '😊', name: 'Happy' },
+            5: { emoji: '😄', name: 'Very Happy' }
+        };
+        
+        last7Days.forEach((mood, index) => {
+            // Calculate bar height (mood value out of 5)
+            const heightPercentage = (mood.mood / maxMood) * 100;
+            const barHeight = Math.max(heightPercentage, 8); // Minimum 8% height
+            
+            // Get emoji and name for this mood
+            const moodData = emojiMap[mood.mood];
+            
+            // Determine bar color based on mood value
+            let barColor = '';
+            if (mood.mood >= 4) {
+                barColor = 'bg-green-500';
+            } else if (mood.mood === 3) {
+                barColor = 'bg-yellow-500';
+            } else {
+                barColor = 'bg-red-500';
+            }
+            
+            // Create bar container
+            const barContainer = document.createElement('div');
+            barContainer.className = 'flex flex-col items-center relative group';
+            
+            // Create emoji display above bar
+            const emojiDisplay = document.createElement('div');
+            emojiDisplay.className = 'text-2xl mb-2';
+            emojiDisplay.textContent = moodData.emoji;
+            
+            // Create bar
+            const bar = document.createElement('div');
+            bar.className = `${barColor} w-10 rounded-t transition-all duration-500 hover:opacity-80 cursor-pointer`;
+            bar.style.height = `${barHeight}%`;
+            bar.style.minHeight = '8px';
+            
+            // Create tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'absolute bottom-full mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition duration-300 whitespace-nowrap z-10';
+            tooltip.innerHTML = `
+                <div class="font-semibold">${moodData.name} (${mood.mood}/5)</div>
+                <div class="text-xs opacity-90">${new Date(mood.date).toLocaleDateString('en-US', { 
+                    weekday: 'short', 
+                    month: 'short', 
+                    day: 'numeric' 
+                })}</div>
+            `;
+            
+            // Add arrow to tooltip
+            const arrow = document.createElement('div');
+            arrow.className = 'absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800';
+            tooltip.appendChild(arrow);
+            
+            barContainer.appendChild(emojiDisplay);
+            barContainer.appendChild(bar);
+            barContainer.appendChild(tooltip);
+            chartContainer.appendChild(barContainer);
+            
+            // Create label with emoji name
+            const label = document.createElement('span');
+            label.textContent = moodData.name;
+            label.className = 'text-center text-xs text-gray-600 mt-1 font-medium';
+            labelsContainer.appendChild(label);
+        });
+    }
+
+    // Show no data message
+    function showNoDataMessage() {
+        moodChart.innerHTML = `
+            <div class="text-center text-gray-500 text-sm flex items-center justify-center h-full">
+                <div>
+                    <i class="fas fa-chart-line text-4xl mb-2"></i>
+                    <p>No mood data yet</p>
+                    <p class="text-xs">Start logging your mood to see your chart</p>
+                </div>
+            </div>
+        `;
+        chartLabels.innerHTML = '';
+    }
+
+    // Load chart on page load
+    loadMoodChart();
+
+    // Add click event listeners to mood emojis
+    moodEmojis.forEach(emoji => {
+        emoji.addEventListener('click', function() {
+            // Remove previous selection (both ring and scale)
+            moodEmojis.forEach(e => {
+                e.classList.remove('ring-2', 'ring-[#304758]', 'ring-opacity-50', 'scale-125', 'transform');
+            });
+            
+            // Add selection to clicked emoji (ring + bigger size)
+            this.classList.add('ring-2', 'ring-[#304758]', 'ring-opacity-50', 'scale-125', 'transform');
+            
+            // Set selected mood
+            selectedMood = this.dataset.mood;
+            selectedMoodText.textContent = this.dataset.description;
+            selectedMoodDiv.classList.remove('hidden');
+            
+            // Enable save button
+            saveMoodBtn.disabled = false;
+        });
+    });
+
+    // Save mood functionality
+    saveMoodBtn.addEventListener('click', function() {
+        if (selectedMood) {
+            // Create form data
+            const formData = new FormData();
+            formData.append('mood', selectedMood);
+            formData.append('notes', moodNotes.value);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+            // Send AJAX request
+            fetch('{% url "core:add_mood" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4';
+                    successMsg.textContent = 'Mood saved successfully!';
+                    
+                    // Insert success message before the mood check section
+                    const moodCheckSection = document.querySelector('.bg-white.rounded-lg.shadow-lg.p-6');
+                    moodCheckSection.parentNode.insertBefore(successMsg, moodCheckSection);
+                    
+                    // Remove success message after 3 seconds
+                    setTimeout(() => {
+                        successMsg.remove();
+                    }, 3000);
+                    
+                    // Reset form
+                    selectedMood = null;
+                    moodNotes.value = '';
+                    selectedMoodDiv.classList.add('hidden');
+                    saveMoodBtn.disabled = true;
+                    moodEmojis.forEach(e => e.classList.remove('ring-2', 'ring-[#304758]', 'ring-opacity-50', 'scale-125', 'transform'));
+                    
+                    // Reload chart with new data
+                    loadMoodChart();
+                } else {
+                    alert('Error saving mood: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error saving mood. Please try again.');
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

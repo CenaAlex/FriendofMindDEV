@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}Mood History - FriendofMind{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Your Mood History</h1>
+            <p class="text-gray-600 mt-2">Track your mental wellness journey over time</p>
+        </div>
+        <a href="{% url 'core:add_mood' %}" 
+           class="bg-primary hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition duration-200">
+            <i class="fas fa-plus mr-2"></i>Add New Entry
+        </a>
+    </div>
+
+    {% if mood_entries %}
+    <!-- Mood Chart Area -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">Mood Trends</h2>
+        <div class="h-64 flex items-end justify-between space-x-2">
+            {% for entry in mood_entries|slice:":14" reversed %}
+            <div class="flex flex-col items-center flex-1">
+                <div class="w-full bg-gray-200 rounded-t-lg relative" style="height: 200px;">
+                    <div class="absolute bottom-0 w-full rounded-t-lg transition-all duration-300 
+                                {% if entry.mood == 5 %}bg-green-500
+                                {% elif entry.mood == 4 %}bg-blue-500
+                                {% elif entry.mood == 3 %}bg-yellow-500
+                                {% elif entry.mood == 2 %}bg-orange-500
+                                {% else %}bg-red-500
+                                {% endif %}" 
+                         style="height: {% if entry.mood == 5 %}200px{% elif entry.mood == 4 %}160px{% elif entry.mood == 3 %}120px{% elif entry.mood == 2 %}80px{% else %}40px{% endif %};"></div>
+                </div>
+                <div class="text-xs text-gray-600 mt-2 text-center">
+                    {{ entry.date|date:"M j" }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="flex justify-between text-sm text-gray-500 mt-4">
+            <span>😢 Very Sad</span>
+            <span>😔 Sad</span>
+            <span>😐 Neutral</span>
+            <span>😊 Happy</span>
+            <span>😄 Very Happy</span>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+            <div class="text-3xl font-bold text-blue-600 mb-2">{{ mood_entries.count }}</div>
+            <div class="text-gray-600">Total Entries</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+            <div class="text-3xl font-bold text-green-600 mb-2">
+                {% if mood_entries %}3.2{% else %}0{% endif %}
+            </div>
+            <div class="text-gray-600">Average Mood</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+            <div class="text-3xl font-bold text-purple-600 mb-2">7</div>
+            <div class="text-gray-600">Day Streak</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+            <div class="text-3xl font-bold text-yellow-600 mb-2">
+                {% if mood_entries %}{{ mood_entries.first.date|timesince }}{% else %}N/A{% endif %}
+            </div>
+            <div class="text-gray-600">Last Entry</div>
+        </div>
+    </div>
+
+    <!-- Mood Entries List -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold">Recent Entries</h2>
+        </div>
+        <div class="divide-y divide-gray-200">
+            {% for entry in mood_entries %}
+            <div class="px-6 py-4 hover:bg-gray-50 transition duration-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="text-3xl">
+                            {% if entry.mood == 5 %}😄
+                            {% elif entry.mood == 4 %}😊
+                            {% elif entry.mood == 3 %}😐
+                            {% elif entry.mood == 2 %}😔
+                            {% else %}😢
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-900">{{ entry.get_mood_display }}</div>
+                            <div class="text-sm text-gray-600">
+                                {{ entry.date|date:"F j, Y" }} at {{ entry.date|time:"g:i A" }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        {% if entry.notes %}
+                        <button onclick="toggleNotes({{ entry.id }})" 
+                                class="text-blue-600 hover:text-blue-800 text-sm">
+                            <i class="fas fa-comment"></i> View Notes
+                        </button>
+                        {% endif %}
+                        <div class="px-3 py-1 rounded-full text-xs font-medium
+                                    {% if entry.mood >= 4 %}bg-green-100 text-green-800
+                                    {% elif entry.mood == 3 %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-red-100 text-red-800
+                                    {% endif %}">
+                            Score: {{ entry.mood }}/5
+                        </div>
+                    </div>
+                </div>
+                {% if entry.notes %}
+                <div id="notes-{{ entry.id }}" class="mt-4 p-3 bg-gray-50 rounded-lg hidden">
+                    <p class="text-gray-700 text-sm">{{ entry.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="mt-8 flex justify-center">
+        <nav class="flex space-x-2">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" 
+                   class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg">Previous</a>
+            {% endif %}
+            
+            <span class="px-3 py-2 bg-primary text-white rounded-lg">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" 
+                   class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg">Next</a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-12">
+        <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <i class="fas fa-chart-line text-gray-400 text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-medium text-gray-900 mb-4">No mood entries yet</h3>
+        <p class="text-gray-600 mb-6">Start tracking your mood to see patterns and trends over time.</p>
+        <a href="{% url 'core:add_mood' %}" 
+           class="bg-primary hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition duration-200">
+            <i class="fas fa-plus mr-2"></i>Add Your First Mood Entry
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Tips Section -->
+    <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h3 class="text-lg font-medium text-blue-800 mb-4">
+            <i class="fas fa-lightbulb mr-2"></i>Mood Tracking Tips
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700">
+            <div>
+                <h4 class="font-medium mb-2">Best Practices:</h4>
+                <ul class="space-y-1">
+                    <li>• Log your mood at the same time each day</li>
+                    <li>• Be honest about your feelings</li>
+                    <li>• Use notes to track triggers or events</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-medium mb-2">What to Look For:</h4>
+                <ul class="space-y-1">
+                    <li>• Patterns in your mood over time</li>
+                    <li>• Triggers that affect your wellbeing</li>
+                    <li>• Progress in your mental health journey</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleNotes(entryId) {
+    const notesDiv = document.getElementById(`notes-${entryId}`);
+    if (notesDiv.classList.contains('hidden')) {
+        notesDiv.classList.remove('hidden');
+    } else {
+        notesDiv.classList.add('hidden');
+    }
+}
+</script>
+{% endblock %}

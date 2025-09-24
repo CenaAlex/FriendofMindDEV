@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+
+{% block title %}Assessment History - FriendofMind{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Your Assessment History</h1>
+            <p class="text-gray-600 mt-2">Track your mental health screening progress over time</p>
+        </div>
+        <a href="{% url 'screening:assessment_list' %}" 
+           class="bg-primary hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition duration-200">
+            <i class="fas fa-plus mr-2"></i>Take New Assessment
+        </a>
+    </div>
+
+    {% if assessments %}
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+            <div class="text-3xl font-bold text-blue-600 mb-2">{{ assessments.count }}</div>
+            <div class="text-gray-600">Total Completed</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+            <div class="text-3xl font-bold text-green-600 mb-2">{{ phq9_assessments.count }}</div>
+            <div class="text-gray-600">Depression (PHQ-9)</div>
+            {% if phq9_trend == 'improving' %}
+            <div class="text-xs text-green-600 mt-1">
+                <i class="fas fa-arrow-down"></i> Improving
+            </div>
+            {% endif %}
+        </div>
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+            <div class="text-3xl font-bold text-purple-600 mb-2">{{ gad7_assessments.count }}</div>
+            <div class="text-gray-600">Anxiety (GAD-7)</div>
+            {% if gad7_trend == 'improving' %}
+            <div class="text-xs text-green-600 mt-1">
+                <i class="fas fa-arrow-down"></i> Improving
+            </div>
+            {% endif %}
+        </div>
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+            <div class="text-3xl font-bold text-yellow-600 mb-2">{{ pss_assessments.count }}</div>
+            <div class="text-gray-600">Stress (PSS)</div>
+            {% if pss_trend == 'improving' %}
+            <div class="text-xs text-green-600 mt-1">
+                <i class="fas fa-arrow-down"></i> Improving
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Latest Results by Type -->
+    {% if latest_phq9 or latest_gad7 or latest_pss %}
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">Latest Results by Assessment Type</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% if latest_phq9 %}
+            <div class="border border-blue-200 rounded-lg p-4">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-brain text-blue-600 mr-2"></i>
+                    <h3 class="font-medium">PHQ-9 Depression</h3>
+                </div>
+                <div class="text-2xl font-bold text-blue-600">{{ latest_phq9.total_score }}/27</div>
+                {% if latest_phq9.assessmentresult %}
+                <div class="text-sm mt-1 px-2 py-1 rounded-full inline-block
+                            {% if latest_phq9.assessmentresult.severity_level == 'minimal' %}bg-green-100 text-green-800
+                            {% elif latest_phq9.assessmentresult.severity_level == 'mild' %}bg-blue-100 text-blue-800
+                            {% elif latest_phq9.assessmentresult.severity_level == 'moderate' %}bg-yellow-100 text-yellow-800
+                            {% elif latest_phq9.assessmentresult.severity_level == 'moderately_severe' %}bg-orange-100 text-orange-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                    {{ latest_phq9.assessmentresult.get_severity_level_display }}
+                </div>
+                {% endif %}
+                <div class="text-xs text-gray-500 mt-2">{{ latest_phq9.completed_at|date:"M j, Y" }}</div>
+            </div>
+            {% endif %}
+            
+            {% if latest_gad7 %}
+            <div class="border border-green-200 rounded-lg p-4">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-heart text-green-600 mr-2"></i>
+                    <h3 class="font-medium">GAD-7 Anxiety</h3>
+                </div>
+                <div class="text-2xl font-bold text-green-600">{{ latest_gad7.total_score }}/21</div>
+                {% if latest_gad7.assessmentresult %}
+                <div class="text-sm mt-1 px-2 py-1 rounded-full inline-block
+                            {% if latest_gad7.assessmentresult.severity_level == 'minimal' %}bg-green-100 text-green-800
+                            {% elif latest_gad7.assessmentresult.severity_level == 'mild' %}bg-blue-100 text-blue-800
+                            {% elif latest_gad7.assessmentresult.severity_level == 'moderate' %}bg-yellow-100 text-yellow-800
+                            {% elif latest_gad7.assessmentresult.severity_level == 'moderately_severe' %}bg-orange-100 text-orange-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                    {{ latest_gad7.assessmentresult.get_severity_level_display }}
+                </div>
+                {% endif %}
+                <div class="text-xs text-gray-500 mt-2">{{ latest_gad7.completed_at|date:"M j, Y" }}</div>
+            </div>
+            {% endif %}
+            
+            {% if latest_pss %}
+            <div class="border border-purple-200 rounded-lg p-4">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-chart-line text-purple-600 mr-2"></i>
+                    <h3 class="font-medium">PSS Stress</h3>
+                </div>
+                <div class="text-2xl font-bold text-purple-600">{{ latest_pss.total_score }}/40</div>
+                {% if latest_pss.assessmentresult %}
+                <div class="text-sm mt-1 px-2 py-1 rounded-full inline-block
+                            {% if latest_pss.assessmentresult.severity_level == 'minimal' %}bg-green-100 text-green-800
+                            {% elif latest_pss.assessmentresult.severity_level == 'mild' %}bg-blue-100 text-blue-800
+                            {% elif latest_pss.assessmentresult.severity_level == 'moderate' %}bg-yellow-100 text-yellow-800
+                            {% elif latest_pss.assessmentresult.severity_level == 'moderately_severe' %}bg-orange-100 text-orange-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                    {{ latest_pss.assessmentresult.get_severity_level_display }}
+                </div>
+                {% endif %}
+                <div class="text-xs text-gray-500 mt-2">{{ latest_pss.completed_at|date:"M j, Y" }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Assessment History List -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold">Completed Assessments</h2>
+        </div>
+        <div class="divide-y divide-gray-200">
+            {% for assessment in assessments %}
+            <div class="px-6 py-4 hover:bg-gray-50 transition duration-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex-shrink-0">
+                            {% if assessment.assessment.name == 'phq9' %}
+                                <div class="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-brain text-blue-600"></i>
+                                </div>
+                            {% elif assessment.assessment.name == 'gad7' %}
+                                <div class="bg-green-100 w-12 h-12 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-heart text-green-600"></i>
+                                </div>
+                            {% else %}
+                                <div class="bg-purple-100 w-12 h-12 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-chart-line text-purple-600"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">{{ assessment.assessment.title }}</h3>
+                            <p class="text-sm text-gray-600">
+                                Completed on {{ assessment.completed_at|date:"F j, Y" }} at {{ assessment.completed_at|time:"g:i A" }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-right">
+                            <div class="text-lg font-semibold text-gray-900">Score: {{ assessment.total_score }}</div>
+                            {% if assessment.assessmentresult %}
+                            <div class="text-sm font-medium
+                                        {% if assessment.assessmentresult.severity_level == 'minimal' %}text-green-600
+                                        {% elif assessment.assessmentresult.severity_level == 'mild' %}text-blue-600
+                                        {% elif assessment.assessmentresult.severity_level == 'moderate' %}text-yellow-600
+                                        {% elif assessment.assessmentresult.severity_level == 'moderately_severe' %}text-orange-600
+                                        {% else %}text-red-600
+                                        {% endif %}">
+                                {{ assessment.assessmentresult.get_severity_level_display }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'screening:assessment_result' assessment.id %}" 
+                           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition duration-200">
+                            <i class="fas fa-eye mr-1"></i>View Results
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="mt-8 flex justify-center">
+        <nav class="flex space-x-2">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" 
+                   class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg">Previous</a>
+            {% endif %}
+            
+            <span class="px-3 py-2 bg-primary text-white rounded-lg">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" 
+                   class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg">Next</a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-12">
+        <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <i class="fas fa-clipboard-list text-gray-400 text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-medium text-gray-900 mb-4">No assessments completed yet</h3>
+        <p class="text-gray-600 mb-6">Take your first mental health assessment to start tracking your progress.</p>
+        <a href="{% url 'screening:assessment_list' %}" 
+           class="bg-primary hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition duration-200">
+            <i class="fas fa-play mr-2"></i>Take Your First Assessment
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Progress Insights -->
+    {% if assessments %}
+    <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h3 class="text-lg font-medium text-blue-800 mb-4">
+            <i class="fas fa-chart-bar mr-2"></i>Progress Insights
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700">
+            <div>
+                <h4 class="font-medium mb-2">Regular Monitoring Benefits:</h4>
+                <ul class="space-y-1">
+                    <li>• Track changes in your mental health over time</li>
+                    <li>• Identify patterns and triggers</li>
+                    <li>• Monitor treatment effectiveness</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-medium mb-2">Recommended Frequency:</h4>
+                <ul class="space-y-1">
+                    <li>• PHQ-9: Every 2-4 weeks during treatment</li>
+                    <li>• GAD-7: Weekly to monthly</li>
+                    <li>• PSS: Monthly or during stressful periods</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

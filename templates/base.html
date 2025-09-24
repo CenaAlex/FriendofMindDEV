@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FriendofMind - Mental Health Support{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5B9BD5',
+                        secondary: '#70AD8F',
+                        accent: '#F4A261',
+                        dark: '#2D3748',
+                        light: '#F7FAFC'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <nav class="bg-gradient-to-r from-primary to-secondary shadow-lg">
+        <div class="max-w-8xl mx-auto px-16 sm:px-20 lg:px-24">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    {% if user.is_authenticated %}
+                        <div class="relative group mr-4">
+                            <button class="text-white hover:text-gray-200 px-3 py-2 rounded-md flex items-center">
+                                <i class="fas fa-bars text-2xl"></i>
+                            </button>
+                            <div class="absolute left-0 mt-1 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                <a href="{% url 'core:dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                                </a>
+                                <a href="{% url 'screening:assessment_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-clipboard-list mr-2"></i>Take Assessment
+                                </a>
+                                <a href="{% url 'screening:assessment_history' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-history mr-2"></i>Assessment History
+                                </a>
+                                <a href="{% url 'mentalhealth:resource_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-book-open mr-2"></i>Resources
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                    <a href="{% url 'core:landing' %}" class="text-[#304758] text-2xl">
+                        <span class="font-bold">FriendofMind</span>
+                    </a>
+                </div>
+                
+                {% if request.resolver_match.url_name == 'landing' %}
+                <div class="flex items-center space-x-6">
+                    <a href="{% url 'core:landing' %}" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-lg font-medium">Home</a>
+                    <a href="{% url 'core:landing' %}#features" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-lg font-medium">Features</a>
+                    <a href="{% url 'core:landing' %}#how-it-works" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-lg font-medium">How it Works</a>
+                    <a href="{% url 'core:landing' %}#about" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-lg font-medium">About</a>
+                </div>
+                {% endif %}
+                
+                <div class="flex items-center space-x-6">
+                    {% if user.is_authenticated %}
+                        <div class="relative group">
+                            <button class="text-white hover:text-gray-200 px-3 py-2 rounded-md flex items-center">
+                                <i class="fas fa-user-circle text-2xl"></i>
+                            </button>
+                            <div class="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                <a href="{% url 'core:profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-user mr-2"></i>Profile
+                                </a>
+                                <div class="border-t border-gray-200"></div>
+                                <a href="{% url 'core:logout' %}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <button onclick="openLoginModal()" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-lg font-medium">Log In</button>
+                        <button onclick="openHelpModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md text-lg font-semibold">
+                            Get Help Now
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="max-w-7xl mx-auto px-16 sm:px-20 lg:px-24 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">FriendofMind</h3>
+                    <p class="text-gray-300">Organization-grade mental health assessments, personalized insights, and evidence-based resources to support your mental wellness journey.</p>
+                </div>
+                <div>
+                    <h4 class="text-md font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="{% url 'screening:assessment_list' %}" class="text-gray-300 hover:text-white">Start Assessment</a></li>
+                        <li><a href="{% url 'mentalhealth:resource_list' %}" class="text-gray-300 hover:text-white">Resources</a></li>
+                        <li><a href="{% url 'mentalhealth:professional_list' %}" class="text-gray-300 hover:text-white">Find Organizations</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-md font-semibold mb-4">Crisis Support</h4>
+                    <ul class="space-y-2">
+                        <li class="text-gray-300">National Suicide Prevention Lifeline: <strong>988</strong></li>
+                        <li class="text-gray-300">Crisis Text Line: Text HOME to <strong>741741</strong></li>
+                        <li class="text-gray-300">SAMHSA National Helpline: <strong>1-800-662-4357</strong></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-md font-semibold mb-4">Support</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-300 hover:text-white">Contact Us</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-4 text-center text-gray-300">
+                <p>&copy; 2024 FriendofMind. All rights reserved. This platform is for informational purposes only and is not a substitute for organizational medical advice.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div id="helpModal" class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-6 border w-96 shadow-2xl rounded-lg bg-white">
+            <div class="mt-2">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-2xl font-bold text-gray-900">Contacts</h3>
+                    <button onclick="closeHelpModal()" class="text-gray-400 hover:text-gray-600 text-xl">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="border-b border-gray-300 mb-6"></div>
+                
+                <div class="space-y-4">
+                    <!-- Call Option -->
+                    <div class="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-[#304758] rounded-full flex items-center justify-center">
+                                <i class="fas fa-phone text-white text-lg"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">Call</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <a href="tel:09175584673" class="text-[#304758] font-medium hover:underline">
+                                0917 558 4673
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Email Option -->
+                    <div class="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center">
+                                <i class="fas fa-envelope text-white text-lg"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">Email</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <a href="mailto:ngfoundation@gmail.com" class="text-[#304758] font-medium hover:underline">
+                                ngfoundation@gmail.com
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Chat Option -->
+                    <div class="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                                <i class="fas fa-comments text-white text-lg"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">Chat</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[#304758] font-medium">
+                                Mental Health World
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
+                                <i class="fas fa-heart text-white text-lg"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">Crisis Support</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <a href="tel:988" class="text-[#304758] font-medium hover:underline">
+                                988
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-6 border w-96 shadow-2xl rounded-2xl bg-gray-100">
+            <div class="mt-2">
+                <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">
+                    <i class="fas fa-times"></i>
+                </button>
+                
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-[#3F6E6E] mb-2">FriendofMind</h2>
+                    <p class="text-sm text-gray-600">Your Mental Health Companion</p>
+                </div>
+                
+                <form method="post" action="{% url 'core:login' %}">
+                    {% csrf_token %}
+                    <div class="space-y-4">
+                        <div>
+                            <label for="id_username" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                            <input id="id_username" name="username" type="text" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
+                        </div>
+                        
+                        <!-- Password Field -->
+                        <div>
+                            <label for="id_password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <input id="id_password" name="password" type="password" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <input id="remember-me" name="remember-me" type="checkbox" 
+                                   class="h-4 w-4 text-[#3F6E6E] focus:ring-[#3F6E6E] border-gray-300 rounded">
+                            <label for="remember-me" class="ml-2 block text-sm text-gray-700">
+                                Remember me
+                            </label>
+                        </div>
+                        
+                        <button type="submit" 
+                                class="w-full bg-[#4285F4] hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
+                            Log in
+                        </button>
+                        
+                        <div class="flex justify-between text-sm">
+                            <a href="#" class="text-[#4285F4] hover:underline">Forgot password?</a>
+                            <button type="button" onclick="closeLoginModal(); openSignupModal();" class="text-[#4285F4] hover:underline">Don't have an account?</button>
+                        </div>
+                        
+                        <p class="text-xs text-gray-600 text-center mt-4">
+                            We respect your privacy and protect your personal data.
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="signupModal" class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-6 border w-[500px] shadow-2xl rounded-2xl bg-gray-100">
+            <div class="mt-2">
+                <button onclick="closeSignupModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">
+                    <i class="fas fa-times"></i>
+                </button>
+                
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-[#3F6E6E] mb-2">FriendofMind</h2>
+                    <p class="text-sm text-gray-600">Your Mental Health Companion</p>
+                </div>
+                
+                <form method="post" action="{% url 'core:register' %}">
+                    {% csrf_token %}
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="id_first_name" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                                <input id="id_first_name" name="first_name" type="text" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
+                            </div>
+                            
+                            <div>
+                                <label for="id_last_name" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                                <input id="id_last_name" name="last_name" type="text" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="id_email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                            <input id="id_email" name="email" type="email" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
+                        </div>
+                        
+                        <div>
+                            <label for="id_username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                            <input id="id_username" name="username" type="text" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="id_password1" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                <input id="id_password1" name="password1" type="password" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
+                            </div>
+                            
+                            <div>
+                                <label for="id_password2" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                                <input id="id_password2" name="password2" type="password" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <input id="terms" name="terms" type="checkbox" required
+                                   class="h-4 w-4 text-[#3F6E6E] focus:ring-[#3F6E6E] border-gray-300 rounded mt-1">
+                            <label for="terms" class="ml-2 block text-sm text-gray-700">
+                                I agree to the <a href="#" class="text-[#4285F4] hover:underline">Terms and Conditions</a> and <a href="#" class="text-[#4285F4] hover:underline">Privacy Policy</a>
+                            </label>
+                        </div>
+                        
+                        <button type="submit" 
+                                class="w-full bg-[#4285F4] hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
+                            Sign Up
+                        </button>
+                        
+                        <div class="text-center text-sm">
+                            <span class="text-gray-600">Already have an account? </span>
+                            <button type="button" onclick="closeSignupModal(); openLoginModal();" class="text-[#4285F4] hover:underline">Sign in</button>
+                        </div>
+                        
+                        <p class="text-xs text-gray-600 text-center mt-4">
+                            We respect your privacy and protect your personal data.
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openHelpModal() {
+            document.getElementById('helpModal').classList.remove('hidden');
+        }
+        
+        function closeHelpModal() {
+            document.getElementById('helpModal').classList.add('hidden');
+        }
+        
+        function openLoginModal() {
+            document.getElementById('loginModal').classList.remove('hidden');
+        }
+        
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.add('hidden');
+        }
+        
+        function openSignupModal() {
+            document.getElementById('signupModal').classList.remove('hidden');
+        }
+        
+        function closeSignupModal() {
+            document.getElementById('signupModal').classList.add('hidden');
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('helpModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeHelpModal();
+            }
+        });
+        
+        document.getElementById('loginModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLoginModal();
+            }
+        });
+        
+        document.getElementById('signupModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSignupModal();
+            }
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

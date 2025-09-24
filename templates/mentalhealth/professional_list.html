@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block title %}Mental Health Organizations - FriendofMind{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">Mental Health Organizations</h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+            Connect with verified mental health organizations across the Philippines. Find licensed organizations, 
+            clinics, and support centers that can provide the support you need.
+        </p>
+    </div>
+
+    {% if professionals %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for professional in professionals %}
+        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition duration-300 p-6">
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ professional.name }}</h3>
+                    <p class="text-blue-600 font-medium">{{ professional.get_specialization_display }}</p>
+                    {% if professional.license_number %}
+                    <p class="text-sm text-gray-500">License: {{ professional.license_number }}</p>
+                    {% endif %}
+                </div>
+                <div class="flex-shrink-0">
+                    <i class="fas fa-check-circle text-green-500" title="Verified Organization"></i>
+                </div>
+            </div>
+            
+            {% if professional.clinic_name %}
+            <div class="mb-3">
+                <p class="text-sm font-medium text-gray-900">{{ professional.clinic_name }}</p>
+            </div>
+            {% endif %}
+            
+            <div class="space-y-2 mb-4 text-sm text-gray-600">
+                <div class="flex items-center">
+                    <i class="fas fa-map-marker-alt mr-2 w-4"></i>
+                    <span>{{ professional.city }}</span>
+                </div>
+                
+                <div class="flex items-center">
+                    <i class="fas fa-phone mr-2 w-4"></i>
+                    <span>{{ professional.phone }}</span>
+                </div>
+                
+                {% if professional.email %}
+                <div class="flex items-center">
+                    <i class="fas fa-envelope mr-2 w-4"></i>
+                    <span>{{ professional.email }}</span>
+                </div>
+                {% endif %}
+                
+                {% if professional.consultation_fee %}
+                <div class="flex items-center">
+                    <i class="fas fa-peso-sign mr-2 w-4"></i>
+                    <span>₱{{ professional.consultation_fee|floatformat:0 }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="flex flex-wrap gap-2 mb-4">
+                {% if professional.accepts_insurance %}
+                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                    <i class="fas fa-shield-alt mr-1"></i>Insurance Accepted
+                </span>
+                {% endif %}
+                
+                {% if professional.is_telehealth %}
+                <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                    <i class="fas fa-video mr-1"></i>Telehealth
+                </span>
+                {% endif %}
+                
+                <span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
+                    {{ professional.languages }}
+                </span>
+            </div>
+            
+            {% if professional.available_days or professional.available_hours %}
+            <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                <h4 class="text-sm font-medium text-gray-900 mb-1">Availability</h4>
+                {% if professional.available_days %}
+                <p class="text-xs text-gray-600">Days: {{ professional.available_days }}</p>
+                {% endif %}
+                {% if professional.available_hours %}
+                <p class="text-xs text-gray-600">Hours: {{ professional.available_hours }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <div class="flex space-x-2">
+                <a href="tel:{{ professional.phone }}" 
+                   class="flex-1 bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-center text-sm transition duration-200">
+                    <i class="fas fa-phone mr-1"></i>Call
+                </a>
+                
+                {% if professional.email %}
+                <a href="mailto:{{ professional.email }}" 
+                   class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-center text-sm transition duration-200">
+                    <i class="fas fa-envelope mr-1"></i>Email
+                </a>
+                {% endif %}
+                
+                {% if professional.website %}
+                <a href="{{ professional.website }}" target="_blank"
+                   class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-center text-sm transition duration-200">
+                    <i class="fas fa-globe mr-1"></i>Website
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="mt-8 flex justify-center">
+        <nav class="flex space-x-2">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg">Previous</a>
+            {% endif %}
+            
+            <span class="px-3 py-2 bg-primary text-white rounded-lg">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg">Next</a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-12">
+        <i class="fas fa-user-md text-gray-400 text-4xl mb-4"></i>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No organizations found</h3>
+        <p class="text-gray-600">We're working on adding more verified mental health organizations to our directory.</p>
+    </div>
+    {% endif %}
+
+    <!-- Specialization Filter -->
+    <div class="mt-12 bg-gray-50 rounded-lg p-6">
+        <h2 class="text-lg font-semibold mb-4">Specializations Available</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+            <div class="flex items-center">
+                <i class="fas fa-brain text-blue-600 mr-2"></i>
+                <span>Clinical Psychology</span>
+            </div>
+            <div class="flex items-center">
+                <i class="fas fa-stethoscope text-green-600 mr-2"></i>
+                <span>Psychiatry</span>
+            </div>
+            <div class="flex items-center">
+                <i class="fas fa-comments text-purple-600 mr-2"></i>
+                <span>Counseling</span>
+            </div>
+            <div class="flex items-center">
+                <i class="fas fa-hands-helping text-yellow-600 mr-2"></i>
+                <span>Therapy</span>
+            </div>
+            <div class="flex items-center">
+                <i class="fas fa-users text-pink-600 mr-2"></i>
+                <span>Social Work</span>
+            </div>
+            <div class="flex items-center">
+                <i class="fas fa-handshake text-indigo-600 mr-2"></i>
+                <span>Peer Support</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Important Notice -->
+    <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <i class="fas fa-info-circle text-blue-400 text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-blue-800">Important Information</h3>
+                <div class="mt-2 text-sm text-blue-700">
+                    <p>
+                        All organizations listed here are verified and licensed. However, we recommend verifying 
+                        credentials independently and ensuring the organization is the right fit for your specific needs. 
+                        If you're in crisis, please contact emergency services or a crisis hotline immediately.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
