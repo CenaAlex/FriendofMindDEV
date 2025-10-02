@@ -1,11 +1,13 @@
 from django.urls import path
-from . import views
+from django.http import HttpResponse
 
 app_name = 'resources'
 
+def placeholder_view(request):
+    return HttpResponse("Resources section coming soon!")
+
 urlpatterns = [
-    # Add resource URLs here
-    # path('', views.index, name='index'),
+    path('', placeholder_view, name='index'),
 ]
 
 

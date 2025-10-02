@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}Organization Staff - FriendofMind{% endblock %}
+
+{% block content %}
+<div class="min-h-screen -mt-16 pt-16 bg-gradient-to-br from-primary via-secondary to-primary">
+    <div class="max-w-8xl mx-auto px-16 sm:px-20 lg:px-24 py-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">Organization Staff</h1>
+            <p class="text-xl text-white opacity-90">
+                Manage your organization's staff members and their roles
+            </p>
+        </div>
+
+        <!-- Add Staff Button -->
+        <div class="mb-8">
+            <button onclick="openAddStaffModal()" class="bg-[#304758] hover:bg-[#1e2d3a] text-white px-6 py-3 rounded-lg font-medium transition duration-300">
+                <i class="fas fa-plus mr-2"></i>Add Staff Member
+            </button>
+        </div>
+
+        <!-- Staff List -->
+        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg shadow-lg p-8">
+            {% if staff %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for member in staff %}
+                    <div class="bg-white bg-opacity-10 rounded-lg p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-[#304758] rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user text-white text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-white">{{ member.user.get_full_name|default:member.user.username }}</h3>
+                                    <p class="text-sm text-gray-200">{{ member.get_role_display }}</p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="editStaff({{ member.id }})" class="text-blue-400 hover:text-blue-300">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="removeStaff({{ member.id }})" class="text-red-400 hover:text-red-300">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-300">Email:</span>
+                                <span class="text-white">{{ member.user.email }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-300">Joined:</span>
+                                <span class="text-white">{{ member.joined_at|date:"M d, Y" }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-300">Status:</span>
+                                <span class="text-white">
+                                    {% if member.is_active %}
+                                        <span class="text-green-400">Active</span>
+                                    {% else %}
+                                        <span class="text-red-400">Inactive</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center text-gray-300 py-12">
+                    <i class="fas fa-users text-6xl mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">No Staff Members</h3>
+                    <p>Add staff members to your organization to get started.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Staff Modal -->
+<div id="addStaffModal" class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-6 border w-96 shadow-2xl rounded-2xl bg-gray-100">
+        <div class="mt-2">
+            <button onclick="closeAddStaffModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-[#3F6E6E] mb-2">Add Staff Member</h2>
+                <p class="text-sm text-gray-600">Invite a new staff member to your organization</p>
+            </div>
+            
+            <form id="addStaffForm">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div id="addStaffError" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"></div>
+                    
+                    <div>
+                        <label for="staff_email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                        <input id="staff_email" name="email" type="email" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label for="staff_role" class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                        <select id="staff_role" name="role" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
+                            <option value="">Select a role</option>
+                            <option value="admin">Administrator</option>
+                            <option value="counselor">Counselor</option>
+                            <option value="psychologist">Psychologist</option>
+                            <option value="psychiatrist">Psychiatrist</option>
+                            <option value="social_worker">Social Worker</option>
+                            <option value="nurse">Nurse</option>
+                            <option value="receptionist">Receptionist</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" 
+                            class="w-full bg-[#4285F4] hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
+                        Send Invitation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openAddStaffModal() {
+    document.getElementById('addStaffModal').classList.remove('hidden');
+}
+
+function closeAddStaffModal() {
+    document.getElementById('addStaffModal').classList.add('hidden');
+    document.getElementById('addStaffError').classList.add('hidden');
+    document.getElementById('addStaffForm').reset();
+}
+
+function editStaff(staffId) {
+    // TODO: Implement edit staff functionality
+    alert('Edit staff functionality coming soon!');
+}
+
+function removeStaff(staffId) {
+    if (confirm('Are you sure you want to remove this staff member?')) {
+        // TODO: Implement remove staff functionality
+        alert('Remove staff functionality coming soon!');
+    }
+}
+
+// Handle add staff form submission
+document.getElementById('addStaffForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const errorDiv = document.getElementById('addStaffError');
+    
+    // TODO: Implement actual staff invitation
+    errorDiv.textContent = 'Staff invitation functionality coming soon!';
+    errorDiv.classList.remove('hidden');
+});
+
+// Close modal when clicking outside
+document.getElementById('addStaffModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAddStaffModal();
+    }
+});
+</script>
+{% endblock %}
+
+
+
+

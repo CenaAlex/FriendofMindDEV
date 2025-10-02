@@ -39,18 +39,33 @@
                                 <i class="fas fa-bars text-2xl"></i>
                             </button>
                             <div class="absolute left-0 mt-1 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                                <a href="{% url 'core:dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
-                                </a>
-                                <a href="{% url 'screening:assessment_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    <i class="fas fa-clipboard-list mr-2"></i>Take Assessment
-                                </a>
-                                <a href="{% url 'screening:assessment_history' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    <i class="fas fa-history mr-2"></i>Assessment History
-                                </a>
-                                <a href="{% url 'mentalhealth:resource_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    <i class="fas fa-book-open mr-2"></i>Resources
-                                </a>
+                                {% if user.role == 'organization' %}
+                                    <a href="{% url 'core:organization_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-tachometer-alt mr-2"></i>Organization Dashboard
+                                    </a>
+                                    <a href="{% url 'core:organization_profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-building mr-2"></i>Organization Profile
+                                    </a>
+                                    <a href="{% url 'core:organization_staff' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-users mr-2"></i>Manage Staff
+                                    </a>
+                                    <a href="{% url 'core:organization_analytics' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-chart-bar mr-2"></i>Analytics
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'core:dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                                    </a>
+                                    <a href="{% url 'screening:assessment_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-clipboard-list mr-2"></i>Take Assessment
+                                    </a>
+                                    <a href="{% url 'screening:assessment_history' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-history mr-2"></i>Assessment History
+                                    </a>
+                                    <a href="{% url 'mentalhealth:resource_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-book-open mr-2"></i>Resources
+                                    </a>
+                                {% endif %}
                             </div>
                         </div>
                     {% endif %}
@@ -86,9 +101,14 @@
                         </div>
                     {% else %}
                         <button onclick="openLoginModal()" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-lg font-medium">Log In</button>
-                        <button onclick="openHelpModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md text-lg font-semibold">
-                            Get Help Now
-                        </button>
+                        <div class="flex space-x-4">
+                            <button onclick="openHelpModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md text-lg font-semibold">
+                                Get Help Now
+                            </button>
+                            <button onclick="openOrgSignupModal()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md text-lg font-semibold">
+                                Organization Signup
+                            </button>
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -362,6 +382,96 @@
         </div>
     </div>
 
+    <div id="orgSignupModal" class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-6 border w-[500px] shadow-2xl rounded-2xl bg-gray-100">
+            <div class="mt-2">
+                <button onclick="closeOrgSignupModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">
+                    <i class="fas fa-times"></i>
+                </button>
+                
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-[#3F6E6E] mb-2">Organization Registration</h2>
+                    <p class="text-sm text-gray-600">Join as a mental health organization</p>
+                </div>
+                
+                <form id="orgSignupForm">
+                    {% csrf_token %}
+                    <div class="space-y-4">
+                        <div id="orgSignupError" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"></div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="org_first_name" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                                <input id="org_first_name" name="first_name" type="text" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
+                            </div>
+                            
+                            <div>
+                                <label for="org_last_name" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                                <input id="org_last_name" name="last_name" type="text" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="org_email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                            <input id="org_email" name="email" type="email" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
+                        </div>
+                        
+                        <div>
+                            <label for="org_username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                            <input id="org_username" name="username" type="text" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
+                        </div>
+                        
+                        <div>
+                            <label for="org_phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                            <input id="org_phone" name="phone" type="tel" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="org_password1" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                <input id="org_password1" name="password1" type="password" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
+                            </div>
+                            
+                            <div>
+                                <label for="org_password2" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                                <input id="org_password2" name="password2" type="password" required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <input id="org_terms" name="terms" type="checkbox" required
+                                   class="h-4 w-4 text-[#3F6E6E] focus:ring-[#3F6E6E] border-gray-300 rounded mt-1">
+                            <label for="org_terms" class="ml-2 block text-sm text-gray-700">
+                                I agree to the <a href="#" class="text-[#4285F4] hover:underline">Terms and Conditions</a> and <a href="#" class="text-[#4285F4] hover:underline">Privacy Policy</a>
+                            </label>
+                        </div>
+                        
+                        <button type="submit" 
+                                class="w-full bg-[#4285F4] hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
+                            Register Organization
+                        </button>
+                        
+                        <div class="text-center text-sm">
+                            <span class="text-gray-600">Already have an account? </span>
+                            <button type="button" onclick="closeOrgSignupModal(); openLoginModal();" class="text-[#4285F4] hover:underline">Sign in</button>
+                        </div>
+                        
+                        <p class="text-xs text-gray-600 text-center mt-4">
+                            We respect your privacy and protect your personal data.
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         function openHelpModal() {
             document.getElementById('helpModal').classList.remove('hidden');
@@ -391,6 +501,16 @@
             document.getElementById('signupModal').classList.add('hidden');
         }
         
+        function openOrgSignupModal() {
+            document.getElementById('orgSignupModal').classList.remove('hidden');
+            // Clear any previous errors
+            document.getElementById('orgSignupError').classList.add('hidden');
+        }
+        
+        function closeOrgSignupModal() {
+            document.getElementById('orgSignupModal').classList.add('hidden');
+        }
+        
         // Close modal when clicking outside
         document.getElementById('helpModal').addEventListener('click', function(e) {
             if (e.target === this) {
@@ -407,6 +527,12 @@
         document.getElementById('signupModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeSignupModal();
+            }
+        });
+        
+        document.getElementById('orgSignupModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeOrgSignupModal();
             }
         });
         
@@ -459,6 +585,41 @@
             .then(data => {
                 if (data.success) {
                     // Registration successful, redirect to dashboard
+                    window.location.href = data.redirect_url;
+                } else {
+                    // Show error message
+                    let errorMessage = data.message;
+                    if (data.errors) {
+                        errorMessage += '\n' + Object.values(data.errors).join('\n');
+                    }
+                    errorDiv.textContent = errorMessage;
+                    errorDiv.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                errorDiv.textContent = 'An error occurred. Please try again.';
+                errorDiv.classList.remove('hidden');
+            });
+        });
+        
+        // Handle organization signup form submission
+        document.getElementById('orgSignupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const errorDiv = document.getElementById('orgSignupError');
+            
+            fetch('{% url "core:modal_organization_register" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Registration successful, redirect to organization profile
                     window.location.href = data.redirect_url;
                 } else {
                     // Show error message

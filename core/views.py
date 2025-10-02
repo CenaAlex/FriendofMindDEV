@@ -1,18 +1,19 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView, CreateView, ListView
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import TemplateView, CreateView, ListView, UpdateView, DeleteView
 from django.contrib import messages
-from django.db.models import Count, Avg
+from django.db.models import Count, Avg, Q
 from django.utils import timezone
 from django.urls import reverse_lazy
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from django.core.paginator import Paginator
 from datetime import timedelta
-from .models import User, MoodEntry
-from .forms import CustomUserCreationForm, MoodEntryForm, UserProfileForm
+from .models import User, MoodEntry, Organization, OrganizationStaff
+from .forms import CustomUserCreationForm, MoodEntryForm, UserProfileForm, OrganizationRegistrationForm, OrganizationProfileForm
 
 class LandingPageView(TemplateView):
     template_name = 'core/landing.html'
@@ -35,6 +36,14 @@ class RegisterView(CreateView):
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'core/dashboard.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Redirect admin users to admin dashboard
+        if request.user.is_superuser or request.user.is_staff:
+            return redirect('core:admin_dashboard')
+        elif request.user.role == 'organization':
+            return redirect('core:organization_dashboard')
+        return super().dispatch(request, *args, **kwargs)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -189,6 +198,204 @@ def modal_register_view(request):
             'success': True, 
             'message': 'Registration successful! Welcome to FriendofMind.',
             'redirect_url': reverse_lazy('core:dashboard')
+        })
+    else:
+        # Return form errors
+        errors = {}
+        for field, field_errors in form.errors.items():
+            errors[field] = field_errors[0] if field_errors else ''
+        
+        return JsonResponse({
+            'success': False, 
+            'message': 'Please correct the errors below.',
+            'errors': errors
+        })
+
+# Organization Views
+class OrganizationDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'core/organization_dashboard.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.role == 'organization':
+            return redirect('core:dashboard')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        try:
+            organization = user.organization_profile
+            context['organization'] = organization
+        except Organization.DoesNotExist:
+            context['organization'] = None
+        
+        # Get organization statistics
+        from screening.models import UserAssessment, AssessmentResult
+        
+        # Get all users who have taken assessments
+        all_assessments = UserAssessment.objects.filter(is_completed=True)
+        context['total_assessments'] = all_assessments.count()
+        
+        # Get recent assessments (last 30 days)
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        recent_assessments = all_assessments.filter(completed_at__gte=thirty_days_ago)
+        context['recent_assessments'] = recent_assessments.count()
+        
+        # Get assessment results that need attention
+        severe_results = AssessmentResult.objects.filter(
+            severity_level__in=['moderately_severe', 'severe']
+        ).order_by('-created_at')[:10]
+        context['severe_cases'] = severe_results
+        
+        # Get organization staff
+        context['staff_count'] = OrganizationStaff.objects.filter(
+            organization=organization, is_active=True
+        ).count() if organization else 0
+        
+        # Get mood data for insights
+        recent_moods = MoodEntry.objects.filter(
+            date__gte=thirty_days_ago
+        ).order_by('-date')[:50]
+        context['recent_moods'] = recent_moods
+        
+        return context
+
+class OrganizationProfileView(LoginRequiredMixin, TemplateView):
+    template_name = 'core/organization_profile.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.role == 'organization':
+            return redirect('core:dashboard')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        try:
+            organization = user.organization_profile
+            context['form'] = OrganizationProfileForm(instance=organization)
+        except Organization.DoesNotExist:
+            context['form'] = OrganizationProfileForm()
+            context['organization'] = None
+        
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        
+        try:
+            organization = user.organization_profile
+            form = OrganizationProfileForm(request.POST, instance=organization)
+        except Organization.DoesNotExist:
+            form = OrganizationProfileForm(request.POST)
+        
+        if form.is_valid():
+            organization = form.save(commit=False)
+            organization.user = user
+            organization.save()
+            messages.success(request, 'Organization profile updated successfully!')
+            return redirect('core:organization_profile')
+        
+        return self.render_to_response({'form': form})
+
+class OrganizationRegistrationView(CreateView):
+    form_class = OrganizationRegistrationForm
+    template_name = 'core/organization_register.html'
+    
+    def form_valid(self, form):
+        user = form.save()
+        login(self.request, user)
+        messages.success(self.request, 'Organization registration successful! Please complete your organization profile.')
+        return redirect('core:organization_profile')
+
+class OrganizationStaffView(LoginRequiredMixin, TemplateView):
+    template_name = 'core/organization_staff.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.role == 'organization':
+            return redirect('core:dashboard')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        try:
+            organization = user.organization_profile
+            context['staff'] = OrganizationStaff.objects.filter(
+                organization=organization, is_active=True
+            ).order_by('-joined_at')
+            context['organization'] = organization
+        except Organization.DoesNotExist:
+            context['staff'] = []
+            context['organization'] = None
+        
+        return context
+
+class OrganizationAnalyticsView(LoginRequiredMixin, TemplateView):
+    template_name = 'core/organization_analytics.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.role == 'organization':
+            return redirect('core:dashboard')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        from screening.models import UserAssessment, AssessmentResult
+        
+        # Get assessment analytics
+        all_assessments = UserAssessment.objects.filter(is_completed=True)
+        
+        # Monthly assessment trends
+        monthly_data = {}
+        for i in range(12):
+            month_start = timezone.now() - timedelta(days=30*i)
+            month_end = timezone.now() - timedelta(days=30*(i-1)) if i > 0 else timezone.now()
+            count = all_assessments.filter(
+                completed_at__gte=month_start,
+                completed_at__lt=month_end
+            ).count()
+            monthly_data[month_start.strftime('%Y-%m')] = count
+        
+        context['monthly_assessments'] = monthly_data
+        
+        # Assessment type distribution
+        assessment_types = {}
+        for assessment in all_assessments:
+            name = assessment.assessment.name
+            assessment_types[name] = assessment_types.get(name, 0) + 1
+        
+        context['assessment_types'] = assessment_types
+        
+        # Severity level distribution
+        severity_levels = {}
+        results = AssessmentResult.objects.filter(
+            user_assessment__is_completed=True
+        )
+        for result in results:
+            level = result.severity_level
+            severity_levels[level] = severity_levels.get(level, 0) + 1
+        
+        context['severity_levels'] = severity_levels
+        
+        return context
+
+@require_http_methods(["POST"])
+def modal_organization_register_view(request):
+    """Handle organization registration from modal form"""
+    form = OrganizationRegistrationForm(request.POST)
+    
+    if form.is_valid():
+        user = form.save()
+        login(request, user)
+        return JsonResponse({
+            'success': True, 
+            'message': 'Organization registration successful! Please complete your organization profile.',
+            'redirect_url': reverse_lazy('core:organization_profile')
         })
     else:
         # Return form errors

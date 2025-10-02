@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block title %}Organization Management - Admin{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="min-h-screen -mt-16 pt-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div class="max-w-8xl mx-auto px-16 sm:px-20 lg:px-24 py-8">
+
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-bold text-white mb-2">Organization Management</h1>
+                    <p class="text-xl text-white opacity-90">Manage organizations and verifications</p>
+                </div>
+                <a href="{% url 'core:admin_dashboard' %}" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition duration-300">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 mb-8">
+            <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Search</label>
+                    <input type="text" name="search" value="{{ search }}" placeholder="Search organizations..." 
+                           class="w-full px-3 py-2 bg-white bg-opacity-20 border border-gray-300 rounded-lg text-white placeholder-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Type</label>
+                    <select name="type" class="w-full px-3 py-2 bg-white bg-opacity-20 border border-gray-300 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Types</option>
+                        <option value="hospital" {% if type_filter == 'hospital' %}selected{% endif %}>Hospital</option>
+                        <option value="clinic" {% if type_filter == 'clinic' %}selected{% endif %}>Clinic</option>
+                        <option value="counseling_center" {% if type_filter == 'counseling_center' %}selected{% endif %}>Counseling Center</option>
+                        <option value="mental_health_center" {% if type_filter == 'mental_health_center' %}selected{% endif %}>Mental Health Center</option>
+                        <option value="ngo" {% if type_filter == 'ngo' %}selected{% endif %}>NGO</option>
+                        <option value="government_agency" {% if type_filter == 'government_agency' %}selected{% endif %}>Government Agency</option>
+                        <option value="private_practice" {% if type_filter == 'private_practice' %}selected{% endif %}>Private Practice</option>
+                        <option value="other" {% if type_filter == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Status</label>
+                    <select name="status" class="w-full px-3 py-2 bg-white bg-opacity-20 border border-gray-300 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Status</option>
+                        <option value="verified" {% if status_filter == 'verified' %}selected{% endif %}>Verified</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-300">
+                        <i class="fas fa-search mr-2"></i>Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Organizations Table -->
+        <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-white bg-opacity-5">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Organization</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Location</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Created</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for org in organizations %}
+                        <tr class="hover:bg-white hover:bg-opacity-5 transition duration-200">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-building text-white"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-white">{{ org.organization_name }}</div>
+                                        <div class="text-sm text-gray-300">{{ org.user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    {{ org.get_organization_type_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                {{ org.city }}, {{ org.state }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if org.is_verified %}bg-green-100 text-green-800
+                                    {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                    {% if org.is_verified %}Verified{% else %}Pending{% endif %}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                {{ org.created_at|date:"M d, Y" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-2">
+                                    <a href="{% url 'core:admin_organization_detail' org.id %}" class="text-blue-400 hover:text-blue-300">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'core:admin_toggle_organization_verification' org.id %}" 
+                                       class="{% if org.is_verified %}text-yellow-400 hover:text-yellow-300{% else %}text-green-400 hover:text-green-300{% endif %}"
+                                       onclick="return confirm('Are you sure you want to {% if org.is_verified %}unverify{% else %}verify{% endif %} this organization?')">
+                                        <i class="fas fa-{% if org.is_verified %}times{% else %}check{% endif %}"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-300">
+                                <i class="fas fa-building text-4xl mb-4"></i>
+                                <p>No organizations found matching your criteria.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="mt-8 flex justify-center">
+            <nav class="flex space-x-2">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1{% if search %}&search={{ search }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                       class="px-3 py-2 bg-white bg-opacity-10 text-white rounded-lg hover:bg-opacity-20 transition duration-300">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                       class="px-3 py-2 bg-white bg-opacity-10 text-white rounded-lg hover:bg-opacity-20 transition duration-300">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                {% endif %}
+
+                <span class="px-3 py-2 bg-blue-600 text-white rounded-lg">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                       class="px-3 py-2 bg-white bg-opacity-10 text-white rounded-lg hover:bg-opacity-20 transition duration-300">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                       class="px-3 py-2 bg-white bg-opacity-10 text-white rounded-lg hover:bg-opacity-20 transition duration-300">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

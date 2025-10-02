@@ -1,0 +1,18 @@
+{% extends "admin/index.html" %}
+{% load static %}
+
+{% block content %}
+<div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h3 style="margin: 0; color: #495057;">FriendOfMind System Administration</h3>
+            <p style="margin: 5px 0 0 0; color: #6c757d;">Manage your application data and settings</p>
+        </div>
+        <a href="{% url 'core:admin_dashboard' %}" style="background: #28a745; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold;">
+            ← Return to Admin Dashboard
+        </a>
+    </div>
+</div>
+
+{{ block.super }}
+{% endblock %}

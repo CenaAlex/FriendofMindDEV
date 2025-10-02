@@ -1,0 +1,17 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | FriendOfMind Admin{% endblock %}
+
+{% block branding %}
+<div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+    <h1 id="site-name">
+        <a href="{% url 'admin:index' %}">FriendOfMind Administration</a>
+    </h1>
+    <a href="{% url 'core:admin_dashboard' %}" style="background: #417690; color: white; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; margin-right: 20px;">
+        ← Back to Dashboard
+    </a>
+</div>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

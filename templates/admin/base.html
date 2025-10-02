@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .back-to-dashboard {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        background: #417690;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        transition: background-color 0.3s;
+    }
+    
+    .back-to-dashboard:hover {
+        background: #2e5a73;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .back-to-dashboard i {
+        margin-right: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block nav-global %}
+{{ block.super }}
+<a href="{% url 'core:admin_dashboard' %}" class="back-to-dashboard">
+    <i class="fas fa-arrow-left"></i>Back to Admin Dashboard
+</a>
+{% endblock %}
