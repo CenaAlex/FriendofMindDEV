@@ -120,3 +120,118 @@ class OrganizationStaff(models.Model):
     
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.role} at {self.organization.organization_name}"
+
+class PatientCase(models.Model):
+    PRIORITY_LEVELS = [
+        ('low', 'Low Priority'),
+        ('medium', 'Medium Priority'),
+        ('high', 'High Priority'),
+        ('urgent', 'Urgent'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('monitoring', 'Monitoring'),
+        ('resolved', 'Resolved'),
+        ('referred', 'Referred'),
+    ]
+    
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='patient_cases')
+    patient_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='patient_cases')
+    assigned_staff = models.ForeignKey(OrganizationStaff, on_delete=models.SET_NULL, null=True, blank=True)
+    case_number = models.CharField(max_length=20, unique=True)
+    priority = models.CharField(max_length=10, choices=PRIORITY_LEVELS, default='medium')
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='active')
+    initial_assessment_date = models.DateTimeField(default=timezone.now)
+    last_contact_date = models.DateTimeField(null=True, blank=True)
+    next_followup_date = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-priority', '-created_at']
+    
+    def __str__(self):
+        return f"Case {self.case_number} - {self.patient_user.get_full_name()}"
+    
+    def save(self, *args, **kwargs):
+        if not self.case_number:
+            # Generate unique case number
+            import random
+            import string
+            while True:
+                case_num = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+                if not PatientCase.objects.filter(case_number=case_num).exists():
+                    self.case_number = case_num
+                    break
+        super().save(*args, **kwargs)
+
+class OrganizationAppointment(models.Model):
+    STATUS_CHOICES = [
+        ('scheduled', 'Scheduled'),
+        ('confirmed', 'Confirmed'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+        ('no_show', 'No Show'),
+    ]
+    
+    APPOINTMENT_TYPES = [
+        ('consultation', 'Initial Consultation'),
+        ('followup', 'Follow-up'),
+        ('therapy', 'Therapy Session'),
+        ('assessment', 'Assessment'),
+        ('group_session', 'Group Session'),
+    ]
+    
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='appointments')
+    patient_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='appointments')
+    staff_member = models.ForeignKey(OrganizationStaff, on_delete=models.CASCADE, related_name='appointments')
+    appointment_type = models.CharField(max_length=20, choices=APPOINTMENT_TYPES)
+    scheduled_date = models.DateTimeField()
+    duration_minutes = models.IntegerField(default=60)
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='scheduled')
+    notes = models.TextField(blank=True)
+    is_online = models.BooleanField(default=False)
+    meeting_link = models.URLField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['scheduled_date']
+    
+    def __str__(self):
+        return f"{self.get_appointment_type_display()} - {self.patient_user.get_full_name()} on {self.scheduled_date.strftime('%Y-%m-%d %H:%M')}"
+
+class OrganizationAlert(models.Model):
+    ALERT_TYPES = [
+        ('high_risk_patient', 'High Risk Patient'),
+        ('missed_appointment', 'Missed Appointment'),
+        ('followup_due', 'Follow-up Due'),
+        ('system_notification', 'System Notification'),
+    ]
+    
+    SEVERITY_LEVELS = [
+        ('info', 'Info'),
+        ('warning', 'Warning'),
+        ('critical', 'Critical'),
+    ]
+    
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='alerts')
+    alert_type = models.CharField(max_length=25, choices=ALERT_TYPES)
+    severity = models.CharField(max_length=10, choices=SEVERITY_LEVELS, default='info')
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    related_user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    related_case = models.ForeignKey(PatientCase, on_delete=models.CASCADE, null=True, blank=True)
+    is_read = models.BooleanField(default=False)
+    is_resolved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.get_alert_type_display()} - {self.title}"

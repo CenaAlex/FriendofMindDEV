@@ -23,6 +23,11 @@ urlpatterns = [
     path('organization/profile/', views.OrganizationProfileView.as_view(), name='organization_profile'),
     path('organization/staff/', views.OrganizationStaffView.as_view(), name='organization_staff'),
     path('organization/analytics/', views.OrganizationAnalyticsView.as_view(), name='organization_analytics'),
+    path('organization/cases/', views.OrganizationCasesView.as_view(), name='organization_cases'),
+    path('organization/appointments/', views.OrganizationAppointmentsView.as_view(), name='organization_appointments'),
+    path('organization/alerts/', views.OrganizationAlertsView.as_view(), name='organization_alerts'),
+    path('organization/alerts/<int:alert_id>/read/', views.mark_alert_read, name='mark_alert_read'),
+    path('organization/alerts/<int:alert_id>/resolve/', views.resolve_alert, name='resolve_alert'),
     
     # Admin URLs (using 'system-admin' to avoid conflicts with Django admin)
     path('system-admin/dashboard/', admin_views.AdminDashboardView.as_view(), name='admin_dashboard'),
@@ -30,6 +35,8 @@ urlpatterns = [
     path('system-admin/users/<int:user_id>/', admin_views.AdminUserDetailView.as_view(), name='admin_user_detail'),
     path('system-admin/organizations/', admin_views.AdminOrganizationManagementView.as_view(), name='admin_organization_management'),
     path('system-admin/organizations/<int:org_id>/', admin_views.AdminOrganizationDetailView.as_view(), name='admin_organization_detail'),
+    path('system-admin/organizations/create/', admin_views.AdminCreateOrganizationView.as_view(), name='admin_create_organization'),
+    path('system-admin/organizations/quick-actions/', admin_views.admin_organization_quick_actions, name='admin_organization_quick_actions'),
     path('system-admin/analytics/', admin_views.admin_analytics_view, name='admin_analytics'),
     path('system-admin/users/<int:user_id>/toggle-status/', admin_views.admin_toggle_user_status, name='admin_toggle_user_status'),
     path('system-admin/organizations/<int:org_id>/toggle-verification/', admin_views.admin_toggle_organization_verification, name='admin_toggle_organization_verification'),

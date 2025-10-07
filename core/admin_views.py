@@ -11,6 +11,7 @@ from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
 from datetime import timedelta
 from .models import User, MoodEntry, Organization, OrganizationStaff
+from .forms import AdminOrganizationCreationForm
 
 def is_admin(user):
     """Check if user is admin (superuser or staff)"""
@@ -285,3 +286,102 @@ def admin_toggle_organization_verification(request, org_id):
     messages.success(request, f'Organization {organization.organization_name} has been {status}.')
     
     return redirect('core:admin_organization_detail', org_id=org_id)
+
+class AdminCreateOrganizationView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
+    """Admin view to manually create organization accounts"""
+    template_name = 'core/admin_create_organization.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = AdminOrganizationCreationForm()
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        form = AdminOrganizationCreationForm(request.POST)
+        
+        if form.is_valid():
+            try:
+                user, organization = form.save()
+                
+                # Send welcome email if requested
+                if form.cleaned_data.get('send_welcome_email'):
+                    self.send_welcome_email(user, form.cleaned_data['password'])
+                
+                messages.success(
+                    request, 
+                    f'Organization "{organization.organization_name}" has been created successfully! '
+                    f'Username: {user.username}'
+                )
+                return redirect('core:admin_organization_detail', org_id=organization.id)
+                
+            except Exception as e:
+                messages.error(request, f'Error creating organization: {str(e)}')
+        
+        return self.render_to_response({'form': form})
+    
+    def send_welcome_email(self, user, password):
+        """Send welcome email to the new organization (placeholder for email functionality)"""
+        # This is a placeholder - you can implement actual email sending here
+        # For now, we'll just add a success message
+        messages.info(
+            self.request,
+            f'Welcome email would be sent to {user.email} with login credentials. '
+            f'(Email functionality needs to be configured)'
+        )
+
+@login_required
+@user_passes_test(is_admin)
+def admin_organization_quick_actions(request):
+    """AJAX endpoint for quick organization actions"""
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        org_id = request.POST.get('org_id')
+        
+        try:
+            organization = get_object_or_404(Organization, id=org_id)
+            
+            if action == 'verify':
+                organization.is_verified = True
+                organization.save()
+                return JsonResponse({
+                    'success': True,
+                    'message': f'{organization.organization_name} has been verified.'
+                })
+            
+            elif action == 'unverify':
+                organization.is_verified = False
+                organization.save()
+                return JsonResponse({
+                    'success': True,
+                    'message': f'{organization.organization_name} has been unverified.'
+                })
+            
+            elif action == 'activate_user':
+                organization.user.is_active = True
+                organization.user.save()
+                return JsonResponse({
+                    'success': True,
+                    'message': f'User account for {organization.organization_name} has been activated.'
+                })
+            
+            elif action == 'deactivate_user':
+                organization.user.is_active = False
+                organization.user.save()
+                return JsonResponse({
+                    'success': True,
+                    'message': f'User account for {organization.organization_name} has been deactivated.'
+                })
+            
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid action.'
+                })
+        
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': str(e)
+            })
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'})

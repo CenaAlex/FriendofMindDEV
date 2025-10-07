@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+
+{% block title %}Case Management - FriendofMind{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="min-h-screen -mt-16 pt-16 bg-gradient-to-br from-primary via-secondary to-primary">
+    <div class="max-w-8xl mx-auto px-16 sm:px-20 lg:px-24 py-8">
+
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-bold text-white mb-2">Case Management</h1>
+                    <p class="text-xl text-white opacity-90">Manage patient cases and track progress</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="{% url 'core:organization_dashboard' %}" class="bg-white bg-opacity-20 text-white px-6 py-3 rounded-lg hover:bg-opacity-30 transition duration-300">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-6 mb-8">
+            <form method="GET" class="flex flex-wrap gap-4 items-end">
+                <div>
+                    <label class="block text-sm font-medium text-white mb-2">Priority</label>
+                    <select name="priority" class="bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg px-4 py-2 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50">
+                        <option value="">All Priorities</option>
+                        {% for value, label in priority_choices %}
+                            <option value="{{ value }}" {% if value == priority_filter %}selected{% endif %} class="text-gray-800">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-white mb-2">Status</label>
+                    <select name="status" class="bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg px-4 py-2 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50">
+                        <option value="">All Statuses</option>
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if value == status_filter %}selected{% endif %} class="text-gray-800">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-white mb-2">Assigned Staff</label>
+                    <select name="staff" class="bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg px-4 py-2 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50">
+                        <option value="">All Staff</option>
+                        {% for staff in staff_members %}
+                            <option value="{{ staff.id }}" {% if staff.id|stringformat:"s" == staff_filter %}selected{% endif %} class="text-gray-800">{{ staff.user.get_full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition duration-300">
+                        <i class="fas fa-filter mr-2"></i>Filter
+                    </button>
+                </div>
+                
+                {% if priority_filter or status_filter or staff_filter %}
+                <div>
+                    <a href="{% url 'core:organization_cases' %}" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition duration-300">
+                        <i class="fas fa-times mr-2"></i>Clear
+                    </a>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Cases List -->
+        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg shadow-lg p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Patient Cases</h2>
+                <div class="text-white opacity-80">
+                    Total: {{ cases.paginator.count }} cases
+                </div>
+            </div>
+
+            {% if cases %}
+                <div class="space-y-4">
+                    {% for case in cases %}
+                    <div class="bg-white bg-opacity-10 rounded-lg p-6 hover:bg-opacity-20 transition duration-300">
+                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                            <!-- Case Info -->
+                            <div class="lg:col-span-2">
+                                <h3 class="text-xl font-semibold text-white mb-2">Case #{{ case.case_number }}</h3>
+                                <div class="space-y-1 text-sm">
+                                    <p class="text-gray-200">
+                                        <i class="fas fa-user mr-2"></i>
+                                        Patient: {{ case.patient_user.get_full_name|default:case.patient_user.username }}
+                                    </p>
+                                    <p class="text-gray-200">
+                                        <i class="fas fa-user-md mr-2"></i>
+                                        Assigned: {{ case.assigned_staff.user.get_full_name|default:"Unassigned" }}
+                                    </p>
+                                    <p class="text-gray-200">
+                                        <i class="fas fa-calendar mr-2"></i>
+                                        Created: {{ case.created_at|date:"M d, Y" }}
+                                    </p>
+                                    {% if case.last_contact_date %}
+                                    <p class="text-gray-200">
+                                        <i class="fas fa-phone mr-2"></i>
+                                        Last Contact: {{ case.last_contact_date|date:"M d, Y" }}
+                                    </p>
+                                    {% endif %}
+                                    {% if case.next_followup_date %}
+                                    <p class="text-gray-200">
+                                        <i class="fas fa-clock mr-2"></i>
+                                        Next Follow-up: {{ case.next_followup_date|date:"M d, Y" }}
+                                    </p>
+                                    {% endif %}
+                                </div>
+                                {% if case.notes %}
+                                <div class="mt-3">
+                                    <p class="text-sm text-gray-300">
+                                        <i class="fas fa-sticky-note mr-2"></i>
+                                        {{ case.notes|truncatechars:100 }}
+                                    </p>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Status and Priority -->
+                            <div class="flex flex-col space-y-3">
+                                <div>
+                                    <span class="text-xs text-gray-300 uppercase tracking-wide">Priority</span>
+                                    <div class="mt-1">
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                                            {% if case.priority == 'urgent' %}bg-red-100 text-red-800
+                                            {% elif case.priority == 'high' %}bg-orange-100 text-orange-800
+                                            {% elif case.priority == 'medium' %}bg-yellow-100 text-yellow-800
+                                            {% else %}bg-green-100 text-green-800{% endif %}">
+                                            {{ case.get_priority_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-gray-300 uppercase tracking-wide">Status</span>
+                                    <div class="mt-1">
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                                            {% if case.status == 'active' %}bg-blue-100 text-blue-800
+                                            {% elif case.status == 'monitoring' %}bg-purple-100 text-purple-800
+                                            {% elif case.status == 'resolved' %}bg-green-100 text-green-800
+                                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                            {{ case.get_status_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="flex flex-col space-y-2">
+                                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition duration-300">
+                                    <i class="fas fa-eye mr-2"></i>View Details
+                                </button>
+                                <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition duration-300">
+                                    <i class="fas fa-edit mr-2"></i>Update
+                                </button>
+                                {% if case.status != 'resolved' %}
+                                <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm transition duration-300">
+                                    <i class="fas fa-calendar-plus mr-2"></i>Schedule
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if cases.has_other_pages %}
+                <div class="flex justify-center mt-8">
+                    <nav class="flex items-center space-x-2">
+                        {% if cases.has_previous %}
+                            <a href="?page={{ cases.previous_page_number }}{% if priority_filter %}&priority={{ priority_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if staff_filter %}&staff={{ staff_filter }}{% endif %}" 
+                               class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg hover:bg-opacity-30 transition duration-300">
+                                Previous
+                            </a>
+                        {% endif %}
+                        
+                        <span class="text-white mx-4">
+                            Page {{ cases.number }} of {{ cases.paginator.num_pages }}
+                        </span>
+                        
+                        {% if cases.has_next %}
+                            <a href="?page={{ cases.next_page_number }}{% if priority_filter %}&priority={{ priority_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if staff_filter %}&staff={{ staff_filter }}{% endif %}" 
+                               class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg hover:bg-opacity-30 transition duration-300">
+                                Next
+                            </a>
+                        {% endif %}
+                    </nav>
+                </div>
+                {% endif %}
+
+            {% else %}
+                <div class="text-center text-gray-300 py-12">
+                    <i class="fas fa-folder-open text-6xl mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">No Cases Found</h3>
+                    <p>No patient cases match your current filters.</p>
+                    {% if priority_filter or status_filter or staff_filter %}
+                    <div class="mt-4">
+                        <a href="{% url 'core:organization_cases' %}" class="text-blue-300 hover:text-blue-100">
+                            Clear filters to see all cases
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

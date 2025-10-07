@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load core_filters %}
 
 {% block title %}Organization Analytics - FriendofMind{% endblock %}
 
@@ -100,7 +101,7 @@
                     <div class="space-y-4">
                         {% for level, count in severity_levels.items %}
                         <div class="flex items-center justify-between">
-                            <span class="text-white font-medium">{{ level|title|replace:"_":" " }}</span>
+                            <span class="text-white font-medium">{{ level|underscore_to_space }}</span>
                             <div class="flex items-center space-x-3">
                                 <div class="w-32 bg-gray-300 rounded-full h-2">
                                     <div class="h-2 rounded-full

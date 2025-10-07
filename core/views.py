@@ -12,7 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
 from datetime import timedelta
-from .models import User, MoodEntry, Organization, OrganizationStaff
+from .models import User, MoodEntry, Organization, OrganizationStaff, PatientCase, OrganizationAppointment, OrganizationAlert
 from .forms import CustomUserCreationForm, MoodEntryForm, UserProfileForm, OrganizationRegistrationForm, OrganizationProfileForm
 
 class LandingPageView(TemplateView):
@@ -211,6 +211,208 @@ def modal_register_view(request):
             'errors': errors
         })
 
+# Enhanced Organization Views
+class OrganizationCasesView(LoginRequiredMixin, TemplateView):
+    template_name = 'core/organization_cases.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.role == 'organization':
+            return redirect('core:dashboard')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        try:
+            organization = user.organization_profile
+            
+            # Get filter parameters
+            priority_filter = self.request.GET.get('priority', '')
+            status_filter = self.request.GET.get('status', '')
+            staff_filter = self.request.GET.get('staff', '')
+            
+            # Base queryset
+            cases = PatientCase.objects.filter(organization=organization, is_active=True)
+            
+            # Apply filters
+            if priority_filter:
+                cases = cases.filter(priority=priority_filter)
+            if status_filter:
+                cases = cases.filter(status=status_filter)
+            if staff_filter:
+                cases = cases.filter(assigned_staff_id=staff_filter)
+            
+            # Pagination
+            paginator = Paginator(cases.order_by('-priority', '-created_at'), 20)
+            page_number = self.request.GET.get('page')
+            page_obj = paginator.get_page(page_number)
+            
+            context.update({
+                'organization': organization,
+                'cases': page_obj,
+                'priority_filter': priority_filter,
+                'status_filter': status_filter,
+                'staff_filter': staff_filter,
+                'staff_members': OrganizationStaff.objects.filter(
+                    organization=organization, is_active=True
+                ),
+                'priority_choices': PatientCase.PRIORITY_LEVELS,
+                'status_choices': PatientCase.STATUS_CHOICES,
+            })
+            
+        except Organization.DoesNotExist:
+            context['organization'] = None
+        
+        return context
+
+class OrganizationAppointmentsView(LoginRequiredMixin, TemplateView):
+    template_name = 'core/organization_appointments.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.role == 'organization':
+            return redirect('core:dashboard')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        try:
+            organization = user.organization_profile
+            
+            # Get filter parameters
+            date_filter = self.request.GET.get('date', '')
+            status_filter = self.request.GET.get('status', '')
+            staff_filter = self.request.GET.get('staff', '')
+            
+            # Base queryset
+            appointments = OrganizationAppointment.objects.filter(organization=organization)
+            
+            # Apply filters
+            if date_filter:
+                from datetime import datetime
+                try:
+                    filter_date = datetime.strptime(date_filter, '%Y-%m-%d').date()
+                    appointments = appointments.filter(scheduled_date__date=filter_date)
+                except ValueError:
+                    pass
+            if status_filter:
+                appointments = appointments.filter(status=status_filter)
+            if staff_filter:
+                appointments = appointments.filter(staff_member_id=staff_filter)
+            
+            # Default to upcoming appointments if no date filter
+            if not date_filter:
+                appointments = appointments.filter(scheduled_date__gte=timezone.now())
+            
+            # Pagination
+            paginator = Paginator(appointments.order_by('scheduled_date'), 20)
+            page_number = self.request.GET.get('page')
+            page_obj = paginator.get_page(page_number)
+            
+            context.update({
+                'organization': organization,
+                'appointments': page_obj,
+                'date_filter': date_filter,
+                'status_filter': status_filter,
+                'staff_filter': staff_filter,
+                'staff_members': OrganizationStaff.objects.filter(
+                    organization=organization, is_active=True
+                ),
+                'status_choices': OrganizationAppointment.STATUS_CHOICES,
+                'appointment_types': OrganizationAppointment.APPOINTMENT_TYPES,
+            })
+            
+        except Organization.DoesNotExist:
+            context['organization'] = None
+        
+        return context
+
+class OrganizationAlertsView(LoginRequiredMixin, TemplateView):
+    template_name = 'core/organization_alerts.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.role == 'organization':
+            return redirect('core:dashboard')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        try:
+            organization = user.organization_profile
+            
+            # Get filter parameters
+            severity_filter = self.request.GET.get('severity', '')
+            type_filter = self.request.GET.get('type', '')
+            status_filter = self.request.GET.get('status', 'unread')  # Default to unread
+            
+            # Base queryset
+            alerts = OrganizationAlert.objects.filter(organization=organization)
+            
+            # Apply filters
+            if severity_filter:
+                alerts = alerts.filter(severity=severity_filter)
+            if type_filter:
+                alerts = alerts.filter(alert_type=type_filter)
+            if status_filter == 'unread':
+                alerts = alerts.filter(is_read=False)
+            elif status_filter == 'unresolved':
+                alerts = alerts.filter(is_resolved=False)
+            
+            # Pagination
+            paginator = Paginator(alerts.order_by('-created_at'), 20)
+            page_number = self.request.GET.get('page')
+            page_obj = paginator.get_page(page_number)
+            
+            context.update({
+                'organization': organization,
+                'alerts': page_obj,
+                'severity_filter': severity_filter,
+                'type_filter': type_filter,
+                'status_filter': status_filter,
+                'severity_choices': OrganizationAlert.SEVERITY_LEVELS,
+                'type_choices': OrganizationAlert.ALERT_TYPES,
+            })
+            
+        except Organization.DoesNotExist:
+            context['organization'] = None
+        
+        return context
+
+@login_required
+@require_http_methods(["POST"])
+def mark_alert_read(request, alert_id):
+    """Mark an alert as read"""
+    try:
+        alert = OrganizationAlert.objects.get(
+            id=alert_id, 
+            organization=request.user.organization_profile
+        )
+        alert.is_read = True
+        alert.save()
+        return JsonResponse({'success': True})
+    except (OrganizationAlert.DoesNotExist, Organization.DoesNotExist):
+        return JsonResponse({'success': False, 'error': 'Alert not found'})
+
+@login_required
+@require_http_methods(["POST"])
+def resolve_alert(request, alert_id):
+    """Mark an alert as resolved"""
+    try:
+        alert = OrganizationAlert.objects.get(
+            id=alert_id, 
+            organization=request.user.organization_profile
+        )
+        alert.is_resolved = True
+        alert.resolved_at = timezone.now()
+        alert.save()
+        return JsonResponse({'success': True})
+    except (OrganizationAlert.DoesNotExist, Organization.DoesNotExist):
+        return JsonResponse({'success': False, 'error': 'Alert not found'})
+
 # Organization Views
 class OrganizationDashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'core/organization_dashboard.html'
@@ -229,6 +431,7 @@ class OrganizationDashboardView(LoginRequiredMixin, TemplateView):
             context['organization'] = organization
         except Organization.DoesNotExist:
             context['organization'] = None
+            return context
         
         # Get organization statistics
         from screening.models import UserAssessment, AssessmentResult
@@ -251,13 +454,79 @@ class OrganizationDashboardView(LoginRequiredMixin, TemplateView):
         # Get organization staff
         context['staff_count'] = OrganizationStaff.objects.filter(
             organization=organization, is_active=True
-        ).count() if organization else 0
+        ).count()
         
         # Get mood data for insights
         recent_moods = MoodEntry.objects.filter(
             date__gte=thirty_days_ago
         ).order_by('-date')[:50]
         context['recent_moods'] = recent_moods
+        
+        # New enhanced features
+        # Patient cases
+        context['active_cases'] = PatientCase.objects.filter(
+            organization=organization, is_active=True
+        ).count()
+        
+        context['urgent_cases'] = PatientCase.objects.filter(
+            organization=organization, 
+            priority='urgent', 
+            is_active=True
+        ).order_by('-created_at')[:5]
+        
+        context['high_priority_cases'] = PatientCase.objects.filter(
+            organization=organization, 
+            priority='high', 
+            is_active=True
+        ).order_by('-created_at')[:5]
+        
+        # Today's appointments
+        today = timezone.now().date()
+        tomorrow = today + timedelta(days=1)
+        context['todays_appointments'] = OrganizationAppointment.objects.filter(
+            organization=organization,
+            scheduled_date__date=today,
+            status__in=['scheduled', 'confirmed']
+        ).order_by('scheduled_date')[:10]
+        
+        context['tomorrows_appointments'] = OrganizationAppointment.objects.filter(
+            organization=organization,
+            scheduled_date__date=tomorrow,
+            status__in=['scheduled', 'confirmed']
+        ).order_by('scheduled_date')[:5]
+        
+        # Alerts
+        context['unread_alerts'] = OrganizationAlert.objects.filter(
+            organization=organization, 
+            is_read=False
+        ).order_by('-created_at')[:10]
+        
+        context['critical_alerts'] = OrganizationAlert.objects.filter(
+            organization=organization, 
+            severity='critical',
+            is_resolved=False
+        ).count()
+        
+        # Weekly statistics
+        week_ago = timezone.now() - timedelta(days=7)
+        context['weekly_appointments'] = OrganizationAppointment.objects.filter(
+            organization=organization,
+            scheduled_date__gte=week_ago,
+            status='completed'
+        ).count()
+        
+        context['missed_appointments'] = OrganizationAppointment.objects.filter(
+            organization=organization,
+            scheduled_date__gte=week_ago,
+            status='no_show'
+        ).count()
+        
+        # Follow-up due
+        context['followups_due'] = PatientCase.objects.filter(
+            organization=organization,
+            next_followup_date__lte=timezone.now(),
+            is_active=True
+        ).count()
         
         return context
 
@@ -408,3 +677,205 @@ def modal_organization_register_view(request):
             'message': 'Please correct the errors below.',
             'errors': errors
         })
+
+# Enhanced Organization Views
+class OrganizationCasesView(LoginRequiredMixin, TemplateView):
+    template_name = 'core/organization_cases.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.role == 'organization':
+            return redirect('core:dashboard')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        try:
+            organization = user.organization_profile
+            
+            # Get filter parameters
+            priority_filter = self.request.GET.get('priority', '')
+            status_filter = self.request.GET.get('status', '')
+            staff_filter = self.request.GET.get('staff', '')
+            
+            # Base queryset
+            cases = PatientCase.objects.filter(organization=organization, is_active=True)
+            
+            # Apply filters
+            if priority_filter:
+                cases = cases.filter(priority=priority_filter)
+            if status_filter:
+                cases = cases.filter(status=status_filter)
+            if staff_filter:
+                cases = cases.filter(assigned_staff_id=staff_filter)
+            
+            # Pagination
+            paginator = Paginator(cases.order_by('-priority', '-created_at'), 20)
+            page_number = self.request.GET.get('page')
+            page_obj = paginator.get_page(page_number)
+            
+            context.update({
+                'organization': organization,
+                'cases': page_obj,
+                'priority_filter': priority_filter,
+                'status_filter': status_filter,
+                'staff_filter': staff_filter,
+                'staff_members': OrganizationStaff.objects.filter(
+                    organization=organization, is_active=True
+                ),
+                'priority_choices': PatientCase.PRIORITY_LEVELS,
+                'status_choices': PatientCase.STATUS_CHOICES,
+            })
+            
+        except Organization.DoesNotExist:
+            context['organization'] = None
+        
+        return context
+
+class OrganizationAppointmentsView(LoginRequiredMixin, TemplateView):
+    template_name = 'core/organization_appointments.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.role == 'organization':
+            return redirect('core:dashboard')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        try:
+            organization = user.organization_profile
+            
+            # Get filter parameters
+            date_filter = self.request.GET.get('date', '')
+            status_filter = self.request.GET.get('status', '')
+            staff_filter = self.request.GET.get('staff', '')
+            
+            # Base queryset
+            appointments = OrganizationAppointment.objects.filter(organization=organization)
+            
+            # Apply filters
+            if date_filter:
+                from datetime import datetime
+                try:
+                    filter_date = datetime.strptime(date_filter, '%Y-%m-%d').date()
+                    appointments = appointments.filter(scheduled_date__date=filter_date)
+                except ValueError:
+                    pass
+            if status_filter:
+                appointments = appointments.filter(status=status_filter)
+            if staff_filter:
+                appointments = appointments.filter(staff_member_id=staff_filter)
+            
+            # Default to upcoming appointments if no date filter
+            if not date_filter:
+                appointments = appointments.filter(scheduled_date__gte=timezone.now())
+            
+            # Pagination
+            paginator = Paginator(appointments.order_by('scheduled_date'), 20)
+            page_number = self.request.GET.get('page')
+            page_obj = paginator.get_page(page_number)
+            
+            context.update({
+                'organization': organization,
+                'appointments': page_obj,
+                'date_filter': date_filter,
+                'status_filter': status_filter,
+                'staff_filter': staff_filter,
+                'staff_members': OrganizationStaff.objects.filter(
+                    organization=organization, is_active=True
+                ),
+                'status_choices': OrganizationAppointment.STATUS_CHOICES,
+                'appointment_types': OrganizationAppointment.APPOINTMENT_TYPES,
+            })
+            
+        except Organization.DoesNotExist:
+            context['organization'] = None
+        
+        return context
+
+class OrganizationAlertsView(LoginRequiredMixin, TemplateView):
+    template_name = 'core/organization_alerts.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.role == 'organization':
+            return redirect('core:dashboard')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        try:
+            organization = user.organization_profile
+            
+            # Get filter parameters
+            severity_filter = self.request.GET.get('severity', '')
+            type_filter = self.request.GET.get('type', '')
+            status_filter = self.request.GET.get('status', 'unread')  # Default to unread
+            
+            # Base queryset
+            alerts = OrganizationAlert.objects.filter(organization=organization)
+            
+            # Apply filters
+            if severity_filter:
+                alerts = alerts.filter(severity=severity_filter)
+            if type_filter:
+                alerts = alerts.filter(alert_type=type_filter)
+            if status_filter == 'unread':
+                alerts = alerts.filter(is_read=False)
+            elif status_filter == 'unresolved':
+                alerts = alerts.filter(is_resolved=False)
+            
+            # Pagination
+            paginator = Paginator(alerts.order_by('-created_at'), 20)
+            page_number = self.request.GET.get('page')
+            page_obj = paginator.get_page(page_number)
+            
+            context.update({
+                'organization': organization,
+                'alerts': page_obj,
+                'severity_filter': severity_filter,
+                'type_filter': type_filter,
+                'status_filter': status_filter,
+                'severity_choices': OrganizationAlert.SEVERITY_LEVELS,
+                'type_choices': OrganizationAlert.ALERT_TYPES,
+            })
+            
+        except Organization.DoesNotExist:
+            context['organization'] = None
+        
+        return context
+
+@login_required
+@require_http_methods(["POST"])
+def mark_alert_read(request, alert_id):
+    """Mark an alert as read"""
+    try:
+        alert = OrganizationAlert.objects.get(
+            id=alert_id, 
+            organization=request.user.organization_profile
+        )
+        alert.is_read = True
+        alert.save()
+        return JsonResponse({'success': True})
+    except (OrganizationAlert.DoesNotExist, Organization.DoesNotExist):
+        return JsonResponse({'success': False, 'error': 'Alert not found'})
+
+@login_required
+@require_http_methods(["POST"])
+def resolve_alert(request, alert_id):
+    """Mark an alert as resolved"""
+    try:
+        alert = OrganizationAlert.objects.get(
+            id=alert_id, 
+            organization=request.user.organization_profile
+        )
+        alert.is_resolved = True
+        alert.resolved_at = timezone.now()
+        alert.save()
+        return JsonResponse({'success': True})
+    except (OrganizationAlert.DoesNotExist, Organization.DoesNotExist):
+        return JsonResponse({'success': False, 'error': 'Alert not found'})
