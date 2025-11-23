@@ -38,6 +38,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'core/dashboard.html'
     
     def dispatch(self, request, *args, **kwargs):
+        # Check if user is authenticated first (middleware might have logged them out)
+        if not request.user.is_authenticated:
+            return redirect('core:modal_login')
+        
         # Redirect admin users to admin dashboard
         if request.user.is_superuser or request.user.is_staff:
             return redirect('core:admin_dashboard')
@@ -76,6 +80,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             result.severity_level in ['moderately_severe', 'severe'] 
             for result in latest_results
         )
+        
+        # Resources accessed (currently not tracked, set to 0)
+        # TODO: Implement resource tracking system
+        context['resources_accessed'] = 0
         
         return context
 
@@ -160,6 +168,10 @@ def logout_view(request):
     logout(request)
     return redirect('core:landing')
 
+def account_suspended_view(request):
+    """View for suspended account page"""
+    return render(request, 'core/account_suspended.html')
+
 @require_http_methods(["POST"])
 def modal_login_view(request):
     """Handle login from modal form"""
@@ -169,12 +181,20 @@ def modal_login_view(request):
     if username and password:
         user = authenticate(request, username=username, password=password)
         if user is not None:
-            login(request, user)
-            return JsonResponse({
-                'success': True, 
-                'message': 'Login successful!',
-                'redirect_url': reverse_lazy('core:dashboard')
-            })
+            if user.is_active:
+                login(request, user)
+                return JsonResponse({
+                    'success': True, 
+                    'message': 'Login successful!',
+                    'redirect_url': reverse_lazy('core:dashboard')
+                })
+            else:
+                # Account is suspended - redirect to suspended page
+                return JsonResponse({
+                    'success': True,  # Still "successful" but redirect to suspended page
+                    'message': 'Account suspended',
+                    'redirect_url': reverse_lazy('core:account_suspended')
+                })
         else:
             return JsonResponse({
                 'success': False, 
@@ -216,6 +236,10 @@ class OrganizationCasesView(LoginRequiredMixin, TemplateView):
     template_name = 'core/organization_cases.html'
     
     def dispatch(self, request, *args, **kwargs):
+        # Check if user is authenticated first
+        if not request.user.is_authenticated:
+            return redirect('core:modal_login')
+        
         if not request.user.role == 'organization':
             return redirect('core:dashboard')
         return super().dispatch(request, *args, **kwargs)
@@ -270,6 +294,10 @@ class OrganizationAppointmentsView(LoginRequiredMixin, TemplateView):
     template_name = 'core/organization_appointments.html'
     
     def dispatch(self, request, *args, **kwargs):
+        # Check if user is authenticated first
+        if not request.user.is_authenticated:
+            return redirect('core:modal_login')
+        
         if not request.user.role == 'organization':
             return redirect('core:dashboard')
         return super().dispatch(request, *args, **kwargs)
@@ -333,6 +361,10 @@ class OrganizationAlertsView(LoginRequiredMixin, TemplateView):
     template_name = 'core/organization_alerts.html'
     
     def dispatch(self, request, *args, **kwargs):
+        # Check if user is authenticated first
+        if not request.user.is_authenticated:
+            return redirect('core:modal_login')
+        
         if not request.user.role == 'organization':
             return redirect('core:dashboard')
         return super().dispatch(request, *args, **kwargs)
@@ -386,6 +418,10 @@ class OrganizationAlertsView(LoginRequiredMixin, TemplateView):
 @require_http_methods(["POST"])
 def mark_alert_read(request, alert_id):
     """Mark an alert as read"""
+    # Check if user is authenticated and has organization profile
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'User not authenticated'})
+    
     try:
         alert = OrganizationAlert.objects.get(
             id=alert_id, 
@@ -394,13 +430,17 @@ def mark_alert_read(request, alert_id):
         alert.is_read = True
         alert.save()
         return JsonResponse({'success': True})
-    except (OrganizationAlert.DoesNotExist, Organization.DoesNotExist):
+    except (OrganizationAlert.DoesNotExist, Organization.DoesNotExist, AttributeError):
         return JsonResponse({'success': False, 'error': 'Alert not found'})
 
 @login_required
 @require_http_methods(["POST"])
 def resolve_alert(request, alert_id):
     """Mark an alert as resolved"""
+    # Check if user is authenticated and has organization profile
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'User not authenticated'})
+    
     try:
         alert = OrganizationAlert.objects.get(
             id=alert_id, 
@@ -410,7 +450,7 @@ def resolve_alert(request, alert_id):
         alert.resolved_at = timezone.now()
         alert.save()
         return JsonResponse({'success': True})
-    except (OrganizationAlert.DoesNotExist, Organization.DoesNotExist):
+    except (OrganizationAlert.DoesNotExist, Organization.DoesNotExist, AttributeError):
         return JsonResponse({'success': False, 'error': 'Alert not found'})
 
 # Organization Views
@@ -418,6 +458,10 @@ class OrganizationDashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'core/organization_dashboard.html'
     
     def dispatch(self, request, *args, **kwargs):
+        # Check if user is authenticated first
+        if not request.user.is_authenticated:
+            return redirect('core:modal_login')
+        
         if not request.user.role == 'organization':
             return redirect('core:dashboard')
         return super().dispatch(request, *args, **kwargs)
@@ -534,6 +578,10 @@ class OrganizationProfileView(LoginRequiredMixin, TemplateView):
     template_name = 'core/organization_profile.html'
     
     def dispatch(self, request, *args, **kwargs):
+        # Check if user is authenticated first
+        if not request.user.is_authenticated:
+            return redirect('core:modal_login')
+        
         if not request.user.role == 'organization':
             return redirect('core:dashboard')
         return super().dispatch(request, *args, **kwargs)
@@ -583,6 +631,10 @@ class OrganizationStaffView(LoginRequiredMixin, TemplateView):
     template_name = 'core/organization_staff.html'
     
     def dispatch(self, request, *args, **kwargs):
+        # Check if user is authenticated first
+        if not request.user.is_authenticated:
+            return redirect('core:modal_login')
+        
         if not request.user.role == 'organization':
             return redirect('core:dashboard')
         return super().dispatch(request, *args, **kwargs)
@@ -607,6 +659,10 @@ class OrganizationAnalyticsView(LoginRequiredMixin, TemplateView):
     template_name = 'core/organization_analytics.html'
     
     def dispatch(self, request, *args, **kwargs):
+        # Check if user is authenticated first
+        if not request.user.is_authenticated:
+            return redirect('core:modal_login')
+        
         if not request.user.role == 'organization':
             return redirect('core:dashboard')
         return super().dispatch(request, *args, **kwargs)
@@ -683,6 +739,10 @@ class OrganizationCasesView(LoginRequiredMixin, TemplateView):
     template_name = 'core/organization_cases.html'
     
     def dispatch(self, request, *args, **kwargs):
+        # Check if user is authenticated first
+        if not request.user.is_authenticated:
+            return redirect('core:modal_login')
+        
         if not request.user.role == 'organization':
             return redirect('core:dashboard')
         return super().dispatch(request, *args, **kwargs)
@@ -737,6 +797,10 @@ class OrganizationAppointmentsView(LoginRequiredMixin, TemplateView):
     template_name = 'core/organization_appointments.html'
     
     def dispatch(self, request, *args, **kwargs):
+        # Check if user is authenticated first
+        if not request.user.is_authenticated:
+            return redirect('core:modal_login')
+        
         if not request.user.role == 'organization':
             return redirect('core:dashboard')
         return super().dispatch(request, *args, **kwargs)
@@ -800,6 +864,10 @@ class OrganizationAlertsView(LoginRequiredMixin, TemplateView):
     template_name = 'core/organization_alerts.html'
     
     def dispatch(self, request, *args, **kwargs):
+        # Check if user is authenticated first
+        if not request.user.is_authenticated:
+            return redirect('core:modal_login')
+        
         if not request.user.role == 'organization':
             return redirect('core:dashboard')
         return super().dispatch(request, *args, **kwargs)
@@ -853,6 +921,10 @@ class OrganizationAlertsView(LoginRequiredMixin, TemplateView):
 @require_http_methods(["POST"])
 def mark_alert_read(request, alert_id):
     """Mark an alert as read"""
+    # Check if user is authenticated and has organization profile
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'User not authenticated'})
+    
     try:
         alert = OrganizationAlert.objects.get(
             id=alert_id, 
@@ -861,13 +933,17 @@ def mark_alert_read(request, alert_id):
         alert.is_read = True
         alert.save()
         return JsonResponse({'success': True})
-    except (OrganizationAlert.DoesNotExist, Organization.DoesNotExist):
+    except (OrganizationAlert.DoesNotExist, Organization.DoesNotExist, AttributeError):
         return JsonResponse({'success': False, 'error': 'Alert not found'})
 
 @login_required
 @require_http_methods(["POST"])
 def resolve_alert(request, alert_id):
     """Mark an alert as resolved"""
+    # Check if user is authenticated and has organization profile
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'User not authenticated'})
+    
     try:
         alert = OrganizationAlert.objects.get(
             id=alert_id, 
@@ -877,5 +953,5 @@ def resolve_alert(request, alert_id):
         alert.resolved_at = timezone.now()
         alert.save()
         return JsonResponse({'success': True})
-    except (OrganizationAlert.DoesNotExist, Organization.DoesNotExist):
+    except (OrganizationAlert.DoesNotExist, Organization.DoesNotExist, AttributeError):
         return JsonResponse({'success': False, 'error': 'Alert not found'})

@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mood Analytics - Admin{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-8">
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-4xl font-bold text-white mb-2">
+                    <i class="fas fa-chart-bar mr-3"></i>Platform Mood Analytics
+                </h1>
+                <p class="text-gray-300">Aggregated mood data from all users</p>
+            </div>
+            <a href="{% url 'core:admin_dashboard' %}" 
+               class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Time Period Filter -->
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-4 mb-6">
+            <div class="flex items-center gap-4">
+                <span class="text-white font-semibold">Time Period:</span>
+                <div class="flex gap-2">
+                    <a href="?days=7" class="px-4 py-2 rounded {% if days_filter == 7 %}bg-blue-600 text-white{% else %}bg-white bg-opacity-20 text-gray-200 hover:bg-opacity-30{% endif %}">
+                        7 Days
+                    </a>
+                    <a href="?days=30" class="px-4 py-2 rounded {% if days_filter == 30 %}bg-blue-600 text-white{% else %}bg-white bg-opacity-20 text-gray-200 hover:bg-opacity-30{% endif %}">
+                        30 Days
+                    </a>
+                    <a href="?days=90" class="px-4 py-2 rounded {% if days_filter == 90 %}bg-blue-600 text-white{% else %}bg-white bg-opacity-20 text-gray-200 hover:bg-opacity-30{% endif %}">
+                        90 Days
+                    </a>
+                </div>
+                <span class="text-gray-300 ml-auto">{{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }}</span>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <!-- Total Entries -->
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-300 text-sm">Total Mood Entries</span>
+                    <i class="fas fa-database text-blue-400 text-2xl"></i>
+                </div>
+                <div class="text-4xl font-bold text-white">{{ total_entries }}</div>
+                <div class="text-sm text-gray-400 mt-2">Across all users</div>
+            </div>
+
+            <!-- Active Users -->
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-300 text-sm">Active Users</span>
+                    <i class="fas fa-users text-green-400 text-2xl"></i>
+                </div>
+                <div class="text-4xl font-bold text-white">{{ active_users_count }}</div>
+                <div class="text-sm text-gray-400 mt-2">out of {{ total_users }} users</div>
+            </div>
+
+            <!-- Engagement Rate -->
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-300 text-sm">Engagement Rate</span>
+                    <i class="fas fa-percentage text-purple-400 text-2xl"></i>
+                </div>
+                <div class="text-4xl font-bold text-white">{{ engagement_rate }}%</div>
+                <div class="text-sm text-gray-400 mt-2">Users logging mood</div>
+            </div>
+
+            <!-- Platform Average Mood -->
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-300 text-sm">Average Mood</span>
+                    <i class="fas fa-smile text-yellow-400 text-2xl"></i>
+                </div>
+                <div class="text-4xl font-bold text-white">{{ avg_mood }}<span class="text-xl text-gray-400">/5</span></div>
+                <div class="text-sm 
+                    {% if avg_mood >= 4 %}text-green-400
+                    {% elif avg_mood >= 3 %}text-blue-400
+                    {% else %}text-yellow-400{% endif %} mt-2">
+                    {% if avg_mood >= 4 %}Excellent{% elif avg_mood >= 3 %}Good{% else %}Needs Attention{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Mood Distribution -->
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold text-white mb-6">
+                <i class="fas fa-chart-pie mr-2"></i>Platform Mood Distribution
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <!-- Positive -->
+                <div class="text-center">
+                    <div class="text-5xl font-bold text-green-400 mb-2">{{ positive_percentage|floatformat:0 }}%</div>
+                    <div class="text-gray-300 mb-4">Positive Moods</div>
+                    <div class="text-3xl text-green-400 mb-2">{{ positive_days }}</div>
+                    <div class="text-sm text-gray-400">Happy or Very Happy</div>
+                </div>
+
+                <!-- Neutral -->
+                <div class="text-center">
+                    <div class="text-5xl font-bold text-blue-400 mb-2">{{ neutral_percentage|floatformat:0 }}%</div>
+                    <div class="text-gray-300 mb-4">Neutral Moods</div>
+                    <div class="text-3xl text-blue-400 mb-2">{{ neutral_count }}</div>
+                    <div class="text-sm text-gray-400">Balanced</div>
+                </div>
+
+                <!-- Negative -->
+                <div class="text-center">
+                    <div class="text-5xl font-bold text-red-400 mb-2">{{ negative_percentage|floatformat:0 }}%</div>
+                    <div class="text-gray-300 mb-4">Challenging Moods</div>
+                    <div class="text-3xl text-red-400 mb-2">{{ negative_days }}</div>
+                    <div class="text-sm text-gray-400">Sad or Very Sad</div>
+                </div>
+            </div>
+
+            <!-- Detailed Mood Bars -->
+            <div class="space-y-4">
+                <!-- Very Happy -->
+                <div>
+                    <div class="flex justify-between text-sm text-gray-300 mb-1">
+                        <span><i class="fas fa-grin-stars text-green-400"></i> Very Happy</span>
+                        <span>{{ very_happy_count }} entries</span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-3">
+                        <div class="bg-green-500 h-3 rounded-full" style="width: {% if total_entries > 0 %}{% widthratio very_happy_count total_entries 100 %}{% else %}0{% endif %}%"></div>
+                    </div>
+                </div>
+
+                <!-- Happy -->
+                <div>
+                    <div class="flex justify-between text-sm text-gray-300 mb-1">
+                        <span><i class="fas fa-smile text-green-300"></i> Happy</span>
+                        <span>{{ happy_count }} entries</span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-3">
+                        <div class="bg-green-400 h-3 rounded-full" style="width: {% if total_entries > 0 %}{% widthratio happy_count total_entries 100 %}{% else %}0{% endif %}%"></div>
+                    </div>
+                </div>
+
+                <!-- Neutral -->
+                <div>
+                    <div class="flex justify-between text-sm text-gray-300 mb-1">
+                        <span><i class="fas fa-meh text-blue-400"></i> Neutral</span>
+                        <span>{{ neutral_count }} entries</span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-3">
+                        <div class="bg-blue-400 h-3 rounded-full" style="width: {% if total_entries > 0 %}{% widthratio neutral_count total_entries 100 %}{% else %}0{% endif %}%"></div>
+                    </div>
+                </div>
+
+                <!-- Sad -->
+                <div>
+                    <div class="flex justify-between text-sm text-gray-300 mb-1">
+                        <span><i class="fas fa-frown text-orange-400"></i> Sad</span>
+                        <span>{{ sad_count }} entries</span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-3">
+                        <div class="bg-orange-400 h-3 rounded-full" style="width: {% if total_entries > 0 %}{% widthratio sad_count total_entries 100 %}{% else %}0{% endif %}%"></div>
+                    </div>
+                </div>
+
+                <!-- Very Sad -->
+                <div>
+                    <div class="flex justify-between text-sm text-gray-300 mb-1">
+                        <span><i class="fas fa-sad-tear text-red-400"></i> Very Sad</span>
+                        <span>{{ very_sad_count }} entries</span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-3">
+                        <div class="bg-red-500 h-3 rounded-full" style="width: {% if total_entries > 0 %}{% widthratio very_sad_count total_entries 100 %}{% else %}0{% endif %}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <!-- Notes Insights -->
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6">
+                <h3 class="text-xl font-bold text-white mb-4">
+                    <i class="fas fa-comment-dots mr-2"></i>Notes & Reflections
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Entries with Notes:</span>
+                        <span class="text-2xl font-bold text-white">{{ entries_with_notes_count }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Notes Percentage:</span>
+                        <span class="text-2xl font-bold text-blue-400">{{ notes_percentage|floatformat:0 }}%</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Avg Entries/User:</span>
+                        <span class="text-2xl font-bold text-purple-400">{{ avg_entries_per_user }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Engagement -->
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6">
+                <h3 class="text-xl font-bold text-white mb-4">
+                    <i class="fas fa-users-cog mr-2"></i>User Engagement
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Total Users:</span>
+                        <span class="text-2xl font-bold text-white">{{ total_users }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Active Users:</span>
+                        <span class="text-2xl font-bold text-green-400">{{ active_users_count }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Engagement Rate:</span>
+                        <span class="text-2xl font-bold 
+                            {% if engagement_rate >= 50 %}text-green-400
+                            {% elif engagement_rate >= 30 %}text-yellow-400
+                            {% else %}text-red-400{% endif %}">{{ engagement_rate }}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Needing Attention -->
+        {% if users_needing_attention %}
+        <div class="bg-red-900 bg-opacity-30 border border-red-500 rounded-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold text-white mb-4">
+                <i class="fas fa-exclamation-triangle text-red-400 mr-2"></i>Users Needing Attention
+            </h2>
+            <p class="text-gray-300 mb-4">Users with average mood below 2.5 (indicating potential distress)</p>
+            <div class="space-y-3">
+                {% for item in users_needing_attention %}
+                <div class="bg-red-800 bg-opacity-40 rounded-lg p-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="text-white font-semibold">
+                                {{ item.user.get_full_name|default:item.user.username }}
+                            </span>
+                            <span class="text-gray-400 text-sm ml-2">({{ item.user.email }})</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-center">
+                                <div class="text-sm text-gray-400">Avg Mood</div>
+                                <div class="text-xl font-bold text-red-300">{{ item.avg_mood }}/5</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm text-gray-400">Entries</div>
+                                <div class="text-xl font-bold text-white">{{ item.entry_count }}</div>
+                            </div>
+                            <a href="{% url 'core:admin_user_detail' item.user.id %}" 
+                               class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                                View Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Most Active Users -->
+        {% if most_active_users %}
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold text-white mb-4">
+                <i class="fas fa-star text-yellow-400 mr-2"></i>Most Active Users
+            </h2>
+            <div class="space-y-3">
+                {% for item in most_active_users %}
+                <div class="bg-white bg-opacity-5 rounded-lg p-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="text-white font-semibold">
+                                {{ item.user.get_full_name|default:item.user.username }}
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-center">
+                                <div class="text-sm text-gray-400">Entries</div>
+                                <div class="text-xl font-bold text-blue-400">{{ item.entry_count }}</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm text-gray-400">Avg Mood</div>
+                                <div class="text-xl font-bold 
+                                    {% if item.avg_mood >= 4 %}text-green-400
+                                    {% elif item.avg_mood >= 3 %}text-blue-400
+                                    {% else %}text-yellow-400{% endif %}">{{ item.avg_mood }}/5</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Empty State -->
+        {% if total_entries == 0 %}
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-12 text-center">
+            <i class="fas fa-chart-bar text-gray-400 text-6xl mb-4"></i>
+            <h3 class="text-2xl font-semibold text-white mb-2">No Mood Data Available</h3>
+            <p class="text-gray-300">No users have logged their mood in the selected time period.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

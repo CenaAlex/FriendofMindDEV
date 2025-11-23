@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Comment{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 py-8">
+    <div class="container mx-auto px-4 max-w-2xl">
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+            <h1 class="text-2xl font-bold text-white mb-6">Edit Comment</h1>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.content }}
+                <div class="flex justify-end space-x-3 mt-6">
+                    <a href="{% url 'core:forum_post_detail' comment.post.id %}" class="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg">Cancel</a>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

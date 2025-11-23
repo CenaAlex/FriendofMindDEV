@@ -10,19 +10,19 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <a href="{% url 'core:mood_history' %}" class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-6 text-white hover:bg-opacity-30 transition duration-300 cursor-pointer">
             <div class="text-center">
-                <h3 class="text-3xl font-bold">{{ recent_moods.count|default:7 }}</h3>
+                <h3 class="text-3xl font-bold">{{ recent_moods.count|default:0 }}</h3>
                 <p class="text-lg">Days Active</p>
                 </div>
         </a>
         <a href="{% url 'screening:assessment_history' %}" class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-6 text-white hover:bg-opacity-30 transition duration-300 cursor-pointer">
             <div class="text-center">
-                <h3 class="text-3xl font-bold">{{ assessments_taken|default:3 }}</h3>
+                <h3 class="text-3xl font-bold">{{ assessments_taken|default:0 }}</h3>
                 <p class="text-lg">Assessments Completed</p>
                 </div>
         </a>
         <a href="{% url 'mentalhealth:resource_list' %}" class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-6 text-white hover:bg-opacity-30 transition duration-300 cursor-pointer">
             <div class="text-center">
-                <h3 class="text-3xl font-bold">4</h3>
+                <h3 class="text-3xl font-bold">{{ resources_accessed|default:0 }}</h3>
                 <p class="text-lg">Resources Accessed</p>
             </div>
         </a>
@@ -138,17 +138,23 @@
                         </div>
                         <span class="text-sm text-white">Complete</span>
                     </a>
-                    <a href="{% url 'core:mood_history' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
+                    <a href="{% url 'core:mood_history_summary' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
                         <div class="w-16 h-16 bg-orange-500 rounded-lg flex items-center justify-center mb-2 hover:bg-orange-600">
-                            <i class="fas fa-comment text-white text-xl"></i>
+                            <i class="fas fa-chart-line text-white text-xl"></i>
                         </div>
-                        <span class="text-sm text-white">Comment</span>
+                        <span class="text-sm text-white">Mood History</span>
+                    </a>
+                    <a href="{% url 'core:forum_list' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
+                        <div class="w-16 h-16 bg-purple-500 rounded-lg flex items-center justify-center mb-2 hover:bg-purple-600">
+                            <i class="fas fa-comments text-white text-xl"></i>
+                        </div>
+                        <span class="text-sm text-white">Forum</span>
                     </a>
                     <a href="{% url 'core:profile' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
                         <div class="w-16 h-16 bg-blue-400 rounded-lg flex items-center justify-center mb-2 hover:bg-blue-500">
-                            <i class="fas fa-image text-white text-xl"></i>
+                            <i class="fas fa-user text-white text-xl"></i>
                         </div>
-                        <span class="text-sm text-white">Photo</span>
+                        <span class="text-sm text-white">Profile</span>
                     </a>
                     <a href="{% url 'mentalhealth:resource_list' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
                         <div class="w-16 h-16 bg-yellow-500 rounded-lg flex items-center justify-center mb-2 hover:bg-yellow-600">

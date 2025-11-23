@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Feedback Management - Admin{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 py-8">
+    <div class="container mx-auto px-4">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-4xl font-bold text-white mb-2">Feedback Management</h1>
+                <p class="text-gray-300">View and respond to user feedback</p>
+            </div>
+            <a href="{% url 'core:admin_dashboard' %}" class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg transition">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm">Total Feedback</p>
+                        <p class="text-3xl font-bold text-white mt-1">{{ total_feedback }}</p>
+                    </div>
+                    <i class="fas fa-comments text-4xl text-blue-400"></i>
+                </div>
+            </div>
+
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm">Pending</p>
+                        <p class="text-3xl font-bold text-yellow-400 mt-1">{{ pending_feedback }}</p>
+                    </div>
+                    <i class="fas fa-clock text-4xl text-yellow-400"></i>
+                </div>
+            </div>
+
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm">Resolved</p>
+                        <p class="text-3xl font-bold text-green-400 mt-1">{{ resolved_feedback }}</p>
+                    </div>
+                    <i class="fas fa-check-circle text-4xl text-green-400"></i>
+                </div>
+            </div>
+
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm">High Priority</p>
+                        <p class="text-3xl font-bold text-red-400 mt-1">{{ high_priority }}</p>
+                    </div>
+                    <i class="fas fa-exclamation-triangle text-4xl text-red-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 mb-8 border border-gray-700">
+            <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-white mb-2">Status</label>
+                    <select name="status" class="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-600">
+                        <option value="">All Status</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="in_review" {% if status_filter == 'in_review' %}selected{% endif %}>In Review</option>
+                        <option value="resolved" {% if status_filter == 'resolved' %}selected{% endif %}>Resolved</option>
+                        <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>Closed</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-white mb-2">Type</label>
+                    <select name="type" class="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-600">
+                        <option value="">All Types</option>
+                        <option value="feedback" {% if type_filter == 'feedback' %}selected{% endif %}>Feedback</option>
+                        <option value="bug" {% if type_filter == 'bug' %}selected{% endif %}>Bug Report</option>
+                        <option value="feature" {% if type_filter == 'feature' %}selected{% endif %}>Feature Request</option>
+                        <option value="issue" {% if type_filter == 'issue' %}selected{% endif %}>Report Issue</option>
+                        <option value="other" {% if type_filter == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-white mb-2">Priority</label>
+                    <select name="priority" class="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-600">
+                        <option value="">All Priorities</option>
+                        <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>Low</option>
+                        <option value="medium" {% if priority_filter == 'medium' %}selected{% endif %}>Medium</option>
+                        <option value="high" {% if priority_filter == 'high' %}selected{% endif %}>High</option>
+                        <option value="urgent" {% if priority_filter == 'urgent' %}selected{% endif %}>Urgent</option>
+                    </select>
+                </div>
+
+                <div class="flex items-end">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition">
+                        <i class="fas fa-filter mr-2"></i>Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Feedback List -->
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg border border-gray-700 overflow-hidden">
+            {% if feedbacks %}
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-800 bg-opacity-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-white font-semibold">User</th>
+                                <th class="px-6 py-3 text-left text-white font-semibold">Type</th>
+                                <th class="px-6 py-3 text-left text-white font-semibold">Subject</th>
+                                <th class="px-6 py-3 text-left text-white font-semibold">Status</th>
+                                <th class="px-6 py-3 text-left text-white font-semibold">Priority</th>
+                                <th class="px-6 py-3 text-left text-white font-semibold">Date</th>
+                                <th class="px-6 py-3 text-left text-white font-semibold">Responses</th>
+                                <th class="px-6 py-3 text-left text-white font-semibold">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                            {% for feedback in feedbacks %}
+                            <tr class="hover:bg-white hover:bg-opacity-5 transition">
+                                <td class="px-6 py-4 text-white">
+                                    <div class="font-semibold">{{ feedback.user.get_full_name|default:feedback.user.username }}</div>
+                                    <div class="text-sm text-gray-400">{{ feedback.user.email }}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                        {% if feedback.feedback_type == 'bug' %}bg-red-600 text-white
+                                        {% elif feedback.feedback_type == 'feature' %}bg-purple-600 text-white
+                                        {% elif feedback.feedback_type == 'issue' %}bg-orange-600 text-white
+                                        {% else %}bg-blue-600 text-white{% endif %}">
+                                        {{ feedback.get_feedback_type_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-white max-w-xs truncate">{{ feedback.subject }}</td>
+                                <td class="px-6 py-4">
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                        {% if feedback.status == 'pending' %}bg-yellow-600 text-white
+                                        {% elif feedback.status == 'in_review' %}bg-blue-600 text-white
+                                        {% elif feedback.status == 'resolved' %}bg-green-600 text-white
+                                        {% else %}bg-gray-600 text-white{% endif %}">
+                                        {{ feedback.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                        {% if feedback.priority == 'urgent' %}bg-red-600 text-white
+                                        {% elif feedback.priority == 'high' %}bg-orange-600 text-white
+                                        {% elif feedback.priority == 'medium' %}bg-yellow-600 text-white
+                                        {% else %}bg-gray-600 text-white{% endif %}">
+                                        {{ feedback.get_priority_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-gray-300 text-sm">{{ feedback.created_at|date:"M d, Y" }}</td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="bg-gray-700 text-white px-3 py-1 rounded-full text-sm">
+                                        {{ feedback.responses.count }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <a href="{% url 'core:admin_feedback_detail' feedback.id %}" 
+                                       class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition">
+                                        <i class="fas fa-eye mr-1"></i>View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-12 text-center">
+                    <i class="fas fa-inbox text-6xl text-gray-600 mb-4"></i>
+                    <p class="text-gray-400 text-lg">No feedback found</p>
+                    <p class="text-gray-500 text-sm mt-2">Try adjusting your filters</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

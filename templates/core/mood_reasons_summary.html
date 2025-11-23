@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mood Reasons Summary - Friend of Mind{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 py-8">
+    <div class="max-w-6xl mx-auto px-4">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-4xl font-bold text-white mb-2">
+                    <i class="fas fa-comment-dots mr-3"></i>Why You Felt The Way You Did
+                </h1>
+                <p class="text-gray-300">Understanding your mood patterns through your own words</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="{% url 'core:mood_history_summary' %}?days={{ days_filter }}" 
+                   class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    <i class="fas fa-chart-line"></i> View Summary
+                </a>
+                <a href="{% url 'core:dashboard' %}" 
+                   class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+
+        <!-- Time Period Filter -->
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-4 mb-6">
+            <div class="flex items-center gap-4">
+                <span class="text-white font-semibold">Time Period:</span>
+                <div class="flex gap-2">
+                    <a href="?days=7" class="px-4 py-2 rounded {% if days_filter == 7 %}bg-blue-600 text-white{% else %}bg-white bg-opacity-20 text-gray-200 hover:bg-opacity-30{% endif %}">
+                        7 Days
+                    </a>
+                    <a href="?days=30" class="px-4 py-2 rounded {% if days_filter == 30 %}bg-blue-600 text-white{% else %}bg-white bg-opacity-20 text-gray-200 hover:bg-opacity-30{% endif %}">
+                        30 Days
+                    </a>
+                    <a href="?days=90" class="px-4 py-2 rounded {% if days_filter == 90 %}bg-blue-600 text-white{% else %}bg-white bg-opacity-20 text-gray-200 hover:bg-opacity-30{% endif %}">
+                        90 Days
+                    </a>
+                </div>
+                <span class="text-gray-300 ml-auto">{{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }}</span>
+            </div>
+        </div>
+
+        <!-- Happy Days Section -->
+        {% if happy_entries %}
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 mb-6">
+            <div class="flex items-center gap-3 mb-6">
+                <i class="fas fa-grin-beam text-green-400 text-3xl"></i>
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Happy Days</h2>
+                    <p class="text-gray-300 text-sm">{{ happy_entries.count }} entries when you felt good</p>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                {% for entry in happy_entries %}
+                <div class="bg-green-900 bg-opacity-30 border border-green-500 rounded-lg p-4">
+                    <div class="flex items-start gap-3">
+                        <div class="flex-shrink-0">
+                            {% if entry.mood == 5 %}
+                            <i class="fas fa-grin-stars text-green-400 text-2xl"></i>
+                            {% else %}
+                            <i class="fas fa-smile text-green-300 text-2xl"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-green-300 font-semibold">{{ entry.get_mood_display }}</span>
+                                <span class="text-gray-400 text-sm">{{ entry.date|date:"M d, Y" }}</span>
+                            </div>
+                            <p class="text-white">{{ entry.notes }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Neutral Days Section -->
+        {% if neutral_entries %}
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 mb-6">
+            <div class="flex items-center gap-3 mb-6">
+                <i class="fas fa-meh text-blue-400 text-3xl"></i>
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Neutral Days</h2>
+                    <p class="text-gray-300 text-sm">{{ neutral_entries.count }} entries when you felt balanced</p>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                {% for entry in neutral_entries %}
+                <div class="bg-blue-900 bg-opacity-30 border border-blue-500 rounded-lg p-4">
+                    <div class="flex items-start gap-3">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-meh text-blue-400 text-2xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-blue-300 font-semibold">{{ entry.get_mood_display }}</span>
+                                <span class="text-gray-400 text-sm">{{ entry.date|date:"M d, Y" }}</span>
+                            </div>
+                            <p class="text-white">{{ entry.notes }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Sad Days Section -->
+        {% if sad_entries %}
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 mb-6">
+            <div class="flex items-center gap-3 mb-6">
+                <i class="fas fa-sad-tear text-red-400 text-3xl"></i>
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Challenging Days</h2>
+                    <p class="text-gray-300 text-sm">{{ sad_entries.count }} entries when you struggled</p>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                {% for entry in sad_entries %}
+                <div class="bg-red-900 bg-opacity-30 border border-red-500 rounded-lg p-4">
+                    <div class="flex items-start gap-3">
+                        <div class="flex-shrink-0">
+                            {% if entry.mood == 1 %}
+                            <i class="fas fa-sad-tear text-red-400 text-2xl"></i>
+                            {% else %}
+                            <i class="fas fa-frown text-orange-400 text-2xl"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-red-300 font-semibold">{{ entry.get_mood_display }}</span>
+                                <span class="text-gray-400 text-sm">{{ entry.date|date:"M d, Y" }}</span>
+                            </div>
+                            <p class="text-white">{{ entry.notes }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Support Message for Sad Days -->
+            <div class="mt-6 bg-yellow-900 bg-opacity-30 border border-yellow-500 rounded-lg p-4">
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-heart text-yellow-400 text-xl"></i>
+                    <div>
+                        <h3 class="text-yellow-300 font-semibold mb-1">You're Not Alone</h3>
+                        <p class="text-gray-300 text-sm">
+                            If you're experiencing difficult days, remember that support is available. Consider:
+                        </p>
+                        <div class="mt-2 space-y-1">
+                            <a href="{% url 'screening:assessment_list' %}" class="block text-blue-300 hover:text-blue-200 text-sm">
+                                → Take a mental health assessment
+                            </a>
+                            <a href="{% url 'mentalhealth:resource_list' %}" class="block text-blue-300 hover:text-blue-200 text-sm">
+                                → Browse support resources
+                            </a>
+                            <a href="{% url 'mentalhealth:professional_list' %}" class="block text-blue-300 hover:text-blue-200 text-sm">
+                                → Find professional help
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Empty State -->
+        {% if not happy_entries and not neutral_entries and not sad_entries %}
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-12 text-center">
+            <i class="fas fa-comment-dots text-gray-400 text-6xl mb-4"></i>
+            <h3 class="text-2xl font-semibold text-white mb-2">No Notes Yet</h3>
+            <p class="text-gray-300 mb-6">
+                Start adding notes when logging your mood to track why you feel the way you do!
+            </p>
+            <p class="text-gray-400 text-sm">
+                Adding notes helps you identify patterns and understand your emotions better.
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- Summary Stats -->
+        {% if happy_entries or neutral_entries or sad_entries %}
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6">
+            <h3 class="text-xl font-bold text-white mb-4">
+                <i class="fas fa-lightbulb mr-2"></i>Insights from Your Notes
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-green-400 mb-2">{{ happy_entries.count }}</div>
+                    <div class="text-gray-300 text-sm">Happy Day{% if happy_entries.count != 1 %}s{% endif %} with Notes</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-blue-400 mb-2">{{ neutral_entries.count }}</div>
+                    <div class="text-gray-300 text-sm">Neutral Day{% if neutral_entries.count != 1 %}s{% endif %} with Notes</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-red-400 mb-2">{{ sad_entries.count }}</div>
+                    <div class="text-gray-300 text-sm">Challenging Day{% if sad_entries.count != 1 %}s{% endif %} with Notes</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="flex justify-center gap-4 mt-8">
+            <a href="{% url 'core:mood_history_summary' %}?days={{ days_filter }}" 
+               class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                <i class="fas fa-chart-line mr-2"></i>View Full Summary
+            </a>
+            <a href="{% url 'core:dashboard' %}" 
+               class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                <i class="fas fa-home mr-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

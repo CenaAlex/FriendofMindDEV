@@ -10,6 +10,13 @@ class AssessmentListView(LoginRequiredMixin, ListView):
     template_name = 'screening/assessment_list.html'
     context_object_name = 'assessments'
     
+    def dispatch(self, request, *args, **kwargs):
+        # Block admins and staff from taking assessments
+        if request.user.is_authenticated and (request.user.is_superuser or request.user.is_staff):
+            messages.warning(request, 'Admins cannot take assessments. Please use the Assessment Management dashboard.')
+            return redirect('core:admin_dashboard')
+        return super().dispatch(request, *args, **kwargs)
+    
     def get_queryset(self):
         return Assessment.objects.filter(is_active=True)
 
@@ -21,6 +28,13 @@ class AssessmentDetailView(LoginRequiredMixin, DetailView):
 
 class TakeAssessmentView(LoginRequiredMixin, TemplateView):
     template_name = 'screening/take_assessment.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Block admins and staff from taking assessments
+        if request.user.is_authenticated and (request.user.is_superuser or request.user.is_staff):
+            messages.warning(request, 'Admins cannot take assessments. You can manage assessments from the admin panel.')
+            return redirect('core:admin_dashboard')
+        return super().dispatch(request, *args, **kwargs)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -109,6 +123,13 @@ class AssessmentHistoryView(LoginRequiredMixin, ListView):
     template_name = 'screening/assessment_history.html'
     context_object_name = 'assessments'
     paginate_by = 10
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Block admins and staff from viewing assessment history (they have no assessments)
+        if request.user.is_authenticated and (request.user.is_superuser or request.user.is_staff):
+            messages.info(request, 'Admins do not have assessment history. Please use Assessment Management.')
+            return redirect('core:admin_dashboard')
+        return super().dispatch(request, *args, **kwargs)
     
     def get_queryset(self):
         return UserAssessment.objects.filter(
