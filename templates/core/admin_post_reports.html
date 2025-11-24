@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Post Reports - Admin{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 py-8">
+    <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-4xl font-bold text-white">Post Reports</h1>
+            <a href="{% url 'core:admin_forum_moderation' %}" class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg">
+                <i class="fas fa-arrow-left mr-2"></i>Back
+            </a>
+        </div>
+
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg border border-gray-700 p-6">
+            <div class="space-y-4">
+                {% for report in reports %}
+                <div class="bg-gray-800 rounded-lg p-6 border {% if report.status == 'pending' %}border-yellow-500{% else %}border-gray-700{% endif %}">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex space-x-3">
+                            <span class="px-3 py-1 bg-red-600 text-white text-sm rounded-full">{{ report.get_reason_display }}</span>
+                            <span class="px-3 py-1 {% if report.status == 'pending' %}bg-yellow-600{% elif report.status == 'action_taken' %}bg-green-600{% else %}bg-gray-600{% endif %} text-white text-sm rounded-full">{{ report.get_status_display }}</span>
+                        </div>
+                        <span class="text-gray-400 text-sm">{{ report.created_at|date:"M d, Y" }}</span>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-white font-semibold mb-2">Post by: {{ report.post.author.username }}</p>
+                        <p class="text-gray-300">{{ report.post.content|truncatewords:50 }}</p>
+                        {% if report.post.image %}
+                        <img src="{{ report.post.image.url }}" alt="Post image" class="max-w-xs h-auto rounded-lg mt-2">
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4 text-sm text-gray-400">
+                        <p>Reported by: {{ report.reporter.username }}</p>
+                        {% if report.description %}
+                        <p class="mt-2 text-gray-300">Details: {{ report.description }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <a href="{% url 'core:admin_review_post_report' report.id %}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+                        Review & Take Action →
+                    </a>
+                </div>
+                {% empty %}
+                <p class="text-gray-400 text-center py-12">No reports found</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

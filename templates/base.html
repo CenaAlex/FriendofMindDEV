@@ -56,6 +56,9 @@
                                     <a href="{% url 'core:dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                         <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
                                     </a>
+                                    <a href="{% url 'core:forum_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-comments mr-2"></i>Community Forum
+                                    </a>
                                     <a href="{% url 'screening:assessment_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                         <i class="fas fa-clipboard-list mr-2"></i>Take Assessment
                                     </a>
@@ -85,6 +88,10 @@
                 
                 <div class="flex items-center space-x-6">
                     {% if user.is_authenticated %}
+                        <!-- Notification Bell -->
+                        {% include 'core/components/notification_bell.html' %}
+                        
+                        <!-- User Profile Menu -->
                         <div class="relative group">
                             <button class="text-white hover:text-gray-200 px-3 py-2 rounded-md flex items-center">
                                 <i class="fas fa-user-circle text-2xl"></i>
@@ -92,6 +99,15 @@
                             <div class="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                                 <a href="{% url 'core:profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     <i class="fas fa-user mr-2"></i>Profile
+                                </a>
+                                <a href="{% url 'core:forum_my_posts' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-edit mr-2"></i>My Forum Posts
+                                </a>
+                                <a href="{% url 'core:my_feedback' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-comment-dots mr-2"></i>My Feedback
+                                </a>
+                                <a href="{% url 'core:notifications_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-bell mr-2"></i>Notifications
                                 </a>
                                 <div class="border-t border-gray-200"></div>
                                 <a href="{% url 'core:logout' %}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
@@ -119,6 +135,12 @@
     <main>
         {% block content %}{% endblock %}
     </main>
+
+    <!-- Floating Feedback Button (for authenticated users) -->
+    {% if user.is_authenticated %}
+        {% include 'core/components/floating_feedback_button.html' %}
+        {% include 'core/components/mood_tracker_popup.html' %}
+    {% endif %}
 
     <footer class="bg-gray-800 text-white mt-16">
         <div class="max-w-7xl mx-auto px-16 sm:px-20 lg:px-24 py-8">

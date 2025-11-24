@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Review Comment Report - Admin{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 py-8">
+    <div class="container mx-auto px-4 max-w-5xl">
+        <h1 class="text-4xl font-bold text-white mb-8">Review Comment Report</h1>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Reported Comment -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-orange-500">
+                    <h2 class="text-2xl font-bold text-white mb-4">Reported Comment</h2>
+                    <p class="text-gray-300 mb-2">By: {{ comment.author.username }} ({{ comment.author.email }})</p>
+                    <p class="text-gray-400 text-sm mb-4">Posted: {{ comment.created_at|date:"F d, Y g:i A" }}</p>
+                    <p class="text-white whitespace-pre-wrap">{{ comment.content }}</p>
+                </div>
+
+                <!-- All Reports -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold text-white mb-4">All Reports ({{ all_reports.count }})</h3>
+                    <div class="space-y-3">
+                        {% for r in all_reports %}
+                        <div class="bg-gray-800 p-4 rounded-lg">
+                            <div class="flex justify-between mb-2">
+                                <span class="px-2 py-1 bg-orange-600 text-white text-xs rounded">{{ r.get_reason_display }}</span>
+                                <span class="text-gray-400 text-xs">{{ r.created_at|date:"M d, Y" }}</span>
+                            </div>
+                            <p class="text-gray-300 text-sm">Reporter: {{ r.reporter.username }}</p>
+                            {% if r.description %}
+                            <p class="text-gray-400 text-sm mt-2">{{ r.description }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Sidebar -->
+            <div>
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold text-white mb-4">Take Action</h3>
+                    
+                    <form method="post" class="space-y-4">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        
+                        <div class="pt-4 border-t border-gray-600 space-y-3">
+                            <button type="submit" name="action" value="hide_comment" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-eye-slash mr-2"></i>Hide Comment
+                            </button>
+                            <button type="submit" name="action" value="unhide_comment" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-eye mr-2"></i>Unhide Comment
+                            </button>
+                            <button type="submit" name="action" value="dismiss" class="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-times mr-2"></i>Dismiss Report
+                            </button>
+                            <button type="submit" name="action" value="delete_comment" onclick="return confirm('Permanently delete this comment?')" class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-trash mr-2"></i>Delete Comment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -129,15 +129,25 @@
                 <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-6">
                     <h2 class="text-xl font-bold text-white mb-4">Organization Actions</h2>
                     <div class="space-y-3">
-                        <a href="{% url 'core:admin_toggle_organization_verification' organization.id %}" 
-                           class="block {% if organization.is_verified %}bg-yellow-600 hover:bg-yellow-700{% else %}bg-green-600 hover:bg-green-700{% endif %} rounded-lg p-4 text-white transition duration-300"
-                           onclick="return confirm('Are you sure you want to {% if organization.is_verified %}unverify{% else %}verify{% endif %} this organization?')">
+                        <a href="{% url 'core:admin_organization_edit' organization.id %}" 
+                           class="block bg-blue-600 hover:bg-blue-700 rounded-lg p-4 text-white transition duration-300">
                             <div class="flex items-center">
-                                <i class="fas fa-{% if organization.is_verified %}times{% else %}check{% endif %} text-xl mr-3"></i>
-                                <span>{% if organization.is_verified %}Unverify Organization{% else %}Verify Organization{% endif %}</span>
+                                <i class="fas fa-edit text-xl mr-3"></i>
+                                <span>Edit Organization Profile</span>
                             </div>
                         </a>
-                        <a href="mailto:{{ organization.email }}" class="block bg-blue-600 hover:bg-blue-700 rounded-lg p-4 text-white transition duration-300">
+                        <form method="POST" action="{% url 'core:admin_toggle_organization_verification' organization.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" 
+                               class="w-full {% if organization.is_verified %}bg-yellow-600 hover:bg-yellow-700{% else %}bg-green-600 hover:bg-green-700{% endif %} rounded-lg p-4 text-white transition duration-300"
+                               onclick="return confirm('Are you sure you want to {% if organization.is_verified %}unverify{% else %}verify{% endif %} this organization?')">
+                                <div class="flex items-center">
+                                    <i class="fas fa-{% if organization.is_verified %}times{% else %}check{% endif %} text-xl mr-3"></i>
+                                    <span>{% if organization.is_verified %}Unverify Organization{% else %}Verify Organization{% endif %}</span>
+                                </div>
+                            </button>
+                        </form>
+                        <a href="mailto:{{ organization.email }}" class="block bg-indigo-600 hover:bg-indigo-700 rounded-lg p-4 text-white transition duration-300">
                             <div class="flex items-center">
                                 <i class="fas fa-envelope text-xl mr-3"></i>
                                 <span>Send Email</span>
@@ -151,6 +161,17 @@
                             </div>
                         </a>
                         {% endif %}
+                        <form method="POST" action="{% url 'core:admin_delete_organization' organization.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" 
+                               class="w-full bg-rose-600 hover:bg-rose-700 rounded-lg p-4 text-white transition duration-300"
+                               onclick="return confirm('Are you sure you want to DELETE this organization? This will also delete the associated user account. This action cannot be undone!')">
+                                <div class="flex items-center">
+                                    <i class="fas fa-trash text-xl mr-3"></i>
+                                    <span>Delete Organization</span>
+                                </div>
+                            </button>
+                        </form>
                     </div>
                 </div>
 

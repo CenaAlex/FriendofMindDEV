@@ -277,3 +277,93 @@ class AdminOrganizationCreationForm(forms.Form):
         )
         
         return user, organization
+
+class AdminUserEditForm(forms.ModelForm):
+    """Form for admins to edit user accounts"""
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'first_name', 'last_name', 'birth_date', 
+                 'phone', 'gender', 'occupation', 'emergency_contact', 'emergency_phone',
+                 'role', 'is_active', 'is_staff', 'is_superuser')
+        widgets = {
+            'birth_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({'class': 'form-control'})
+
+class AdminUserCreateForm(forms.ModelForm):
+    """Form for admins to create new user accounts"""
+    password = forms.CharField(
+        widget=forms.PasswordInput,
+        help_text="Initial password for the user account"
+    )
+    password_confirm = forms.CharField(
+        widget=forms.PasswordInput,
+        label="Confirm Password",
+        help_text="Confirm the password"
+    )
+    
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'first_name', 'last_name', 'birth_date', 
+                 'phone', 'gender', 'occupation', 'emergency_contact', 'emergency_phone',
+                 'role', 'is_active', 'is_staff')
+        widgets = {
+            'birth_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({'class': 'form-control'})
+        # Set defaults
+        self.fields['is_active'].initial = True
+        self.fields['role'].initial = 'user'
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        password_confirm = cleaned_data.get('password_confirm')
+        
+        if password and password_confirm and password != password_confirm:
+            raise forms.ValidationError("Passwords do not match.")
+        
+        # Check if username already exists
+        username = cleaned_data.get('username')
+        if username and User.objects.filter(username=username).exists():
+            raise forms.ValidationError(f"Username '{username}' already exists.")
+        
+        return cleaned_data
+    
+    def save(self, commit=True):
+        from django.contrib.auth.hashers import make_password
+        user = super().save(commit=False)
+        user.password = make_password(self.cleaned_data['password'])
+        if commit:
+            user.save()
+        return user
+
+class AdminOrganizationEditForm(forms.ModelForm):
+    """Form for admins to edit organization profiles"""
+    class Meta:
+        model = Organization
+        fields = ('organization_name', 'organization_type', 'license_number', 'address', 
+                 'city', 'state', 'zip_code', 'country', 'phone', 'email', 'website',
+                 'description', 'services_offered', 'operating_hours', 'emergency_services',
+                 'insurance_accepted', 'languages_spoken', 'is_verified')
+        widgets = {
+            'address': forms.Textarea(attrs={'rows': 3}),
+            'description': forms.Textarea(attrs={'rows': 4}),
+            'services_offered': forms.Textarea(attrs={'rows': 3}),
+            'operating_hours': forms.Textarea(attrs={'rows': 2}),
+            'insurance_accepted': forms.Textarea(attrs={'rows': 2}),
+            'languages_spoken': forms.Textarea(attrs={'rows': 2}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({'class': 'form-control'})

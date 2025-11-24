@@ -11,7 +11,9 @@ from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
 from datetime import timedelta
 from .models import User, MoodEntry, Organization, OrganizationStaff
-from .forms import AdminOrganizationCreationForm
+from .forms import AdminOrganizationCreationForm, AdminUserEditForm, AdminUserCreateForm, AdminOrganizationEditForm
+from screening.models import Assessment, Question, AnswerChoice, UserAssessment
+from screening.forms import AssessmentForm, QuestionForm, AnswerChoiceForm
 
 def is_admin(user):
     """Check if user is admin (superuser or staff)"""
@@ -204,6 +206,9 @@ class AdminOrganizationDetailView(LoginRequiredMixin, AdminRequiredMixin, Detail
 @user_passes_test(is_admin)
 def admin_analytics_view(request):
     """Admin analytics view with detailed statistics"""
+    from screening.models import UserAssessment, AssessmentResult
+    from collections import OrderedDict
+    
     context = {}
     
     # User analytics
@@ -212,45 +217,46 @@ def admin_analytics_view(request):
     context['regular_users'] = User.objects.filter(role='user').count()
     context['organizations'] = User.objects.filter(role='organization').count()
     
-    # Assessment analytics
-    from screening.models import UserAssessment, AssessmentResult
+    # Total organizations (Organization model)
+    context['total_organizations'] = Organization.objects.count()
     
+    # Assessment analytics
     context['total_assessments'] = UserAssessment.objects.filter(is_completed=True).count()
     
-    # Assessment type breakdown
+    # Assessment type breakdown (for template: assessment_types)
     assessment_types = UserAssessment.objects.filter(is_completed=True).values(
         'assessment__name'
-    ).annotate(count=Count('id'))
-    context['assessment_breakdown'] = {item['assessment__name']: item['count'] for item in assessment_types}
+    ).annotate(count=Count('id')).order_by('-count')
+    context['assessment_types'] = {item['assessment__name']: item['count'] for item in assessment_types}
     
     # Severity level distribution
-    severity_distribution = AssessmentResult.objects.values('severity_level').annotate(count=Count('id'))
+    severity_distribution = AssessmentResult.objects.values('severity_level').annotate(
+        count=Count('id')
+    ).order_by('severity_level')
     context['severity_distribution'] = {item['severity_level']: item['count'] for item in severity_distribution}
     
-    # Monthly trends
-    monthly_data = {}
-    for i in range(12):
-        month_start = timezone.now() - timedelta(days=30*i)
-        month_end = timezone.now() - timedelta(days=30*(i-1)) if i > 0 else timezone.now()
+    # Organization types breakdown
+    org_types = Organization.objects.values('organization_type').annotate(
+        count=Count('id')
+    ).order_by('-count')
+    context['org_types'] = {item['organization_type']: item['count'] for item in org_types}
+    
+    # Monthly user growth (last 12 months)
+    monthly_users = OrderedDict()
+    for i in range(11, -1, -1):  # Start from 11 months ago to now
+        month_start = timezone.now() - timedelta(days=30*(i+1))
+        month_end = timezone.now() - timedelta(days=30*i)
         
+        # Use created_at field from custom User model
         users_count = User.objects.filter(
             created_at__gte=month_start,
             created_at__lt=month_end
         ).count()
         
-        assessments_count = UserAssessment.objects.filter(
-            is_completed=True,
-            completed_at__gte=month_start,
-            completed_at__lt=month_end
-        ).count()
-        
-        month_key = month_start.strftime('%Y-%m')
-        monthly_data[month_key] = {
-            'users': users_count,
-            'assessments': assessments_count
-        }
+        month_key = month_start.strftime('%b')  # Short month name
+        monthly_users[month_key] = users_count
     
-    context['monthly_data'] = monthly_data
+    context['monthly_users'] = monthly_users
     
     # Mood analytics
     context['total_mood_entries'] = MoodEntry.objects.count()
@@ -269,7 +275,16 @@ def admin_toggle_user_status(request, user_id):
     user.save()
     
     status = "activated" if user.is_active else "deactivated"
-    messages.success(request, f'User {user.username} has been {status}.')
+    
+    if user.is_active:
+        messages.success(request, f'User "{user.username}" has been {status}. They can now log in.')
+    else:
+        messages.warning(
+            request, 
+            f'User "{user.username}" has been {status}. '
+            f'They will be automatically logged out and redirected to the account suspended page on their next request. '
+            f'They will not be able to log in until reactivated.'
+        )
     
     return redirect('core:admin_user_detail', user_id=user_id)
 
@@ -361,7 +376,7 @@ def admin_organization_quick_actions(request):
                 organization.user.save()
                 return JsonResponse({
                     'success': True,
-                    'message': f'User account for {organization.organization_name} has been activated.'
+                    'message': f'User account for {organization.organization_name} has been activated. They can now log in.'
                 })
             
             elif action == 'deactivate_user':
@@ -369,7 +384,7 @@ def admin_organization_quick_actions(request):
                 organization.user.save()
                 return JsonResponse({
                     'success': True,
-                    'message': f'User account for {organization.organization_name} has been deactivated.'
+                    'message': f'User account for {organization.organization_name} has been deactivated. They will be logged out automatically and cannot log in until reactivated.'
                 })
             
             else:
@@ -385,3 +400,240 @@ def admin_organization_quick_actions(request):
             })
     
     return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+
+# User Edit, Create, and Delete Views
+
+class AdminUserEditView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
+    """Admin view to edit user accounts"""
+    template_name = 'core/admin_user_edit.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user_id = kwargs.get('user_id')
+        user = get_object_or_404(User, id=user_id)
+        context['form'] = AdminUserEditForm(instance=user)
+        context['edit_user'] = user
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        user_id = kwargs.get('user_id')
+        user = get_object_or_404(User, id=user_id)
+        form = AdminUserEditForm(request.POST, instance=user)
+        
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'User "{user.username}" has been updated successfully!')
+            return redirect('core:admin_user_detail', user_id=user_id)
+        
+        return self.render_to_response({'form': form, 'edit_user': user})
+
+class AdminUserCreateView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
+    """Admin view to create new user accounts"""
+    template_name = 'core/admin_user_create.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = AdminUserCreateForm()
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        form = AdminUserCreateForm(request.POST)
+        
+        if form.is_valid():
+            user = form.save()
+            messages.success(
+                request, 
+                f'User "{user.username}" has been created successfully!'
+            )
+            return redirect('core:admin_user_detail', user_id=user.id)
+        
+        return self.render_to_response({'form': form})
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def admin_delete_user(request, user_id):
+    """Delete a user account"""
+    user = get_object_or_404(User, id=user_id)
+    
+    # Prevent deleting self
+    if user.id == request.user.id:
+        messages.error(request, 'You cannot delete your own account.')
+        return redirect('core:admin_user_detail', user_id=user_id)
+    
+    # Prevent deleting superusers (unless you are one)
+    if user.is_superuser and not request.user.is_superuser:
+        messages.error(request, 'You cannot delete a superuser account.')
+        return redirect('core:admin_user_detail', user_id=user_id)
+    
+    username = user.username
+    user.delete()
+    messages.success(request, f'User "{username}" has been deleted successfully.')
+    return redirect('core:admin_user_management')
+
+class AdminOrganizationEditView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
+    """Admin view to edit organization profiles"""
+    template_name = 'core/admin_organization_edit.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        org_id = kwargs.get('org_id')
+        organization = get_object_or_404(Organization, id=org_id)
+        context['form'] = AdminOrganizationEditForm(instance=organization)
+        context['organization'] = organization
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        org_id = kwargs.get('org_id')
+        organization = get_object_or_404(Organization, id=org_id)
+        form = AdminOrganizationEditForm(request.POST, instance=organization)
+        
+        if form.is_valid():
+            form.save()
+            messages.success(
+                request, 
+                f'Organization "{organization.organization_name}" has been updated successfully!'
+            )
+            return redirect('core:admin_organization_detail', org_id=org_id)
+        
+        return self.render_to_response({'form': form, 'organization': organization})
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def admin_delete_organization(request, org_id):
+    """Delete an organization and its associated user account"""
+    organization = get_object_or_404(Organization, id=org_id)
+    user = organization.user
+    
+    # Prevent deleting if the organization user is the current admin
+    if user.id == request.user.id:
+        messages.error(request, 'You cannot delete your own account.')
+        return redirect('core:admin_organization_detail', org_id=org_id)
+    
+    org_name = organization.organization_name
+    user.delete()  # This will cascade delete the organization
+    messages.success(request, f'Organization "{org_name}" and its associated account have been deleted successfully.')
+    return redirect('core:admin_organization_management')
+
+# Assessment Management Views
+
+class AdminAssessmentManagementView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+    """Admin view to manage all assessments"""
+    model = Assessment
+    template_name = 'core/admin_assessment_management.html'
+    context_object_name = 'assessments'
+    
+    def get_queryset(self):
+        return Assessment.objects.all().order_by('name', '-created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add assessment statistics
+        context['total_assessments'] = Assessment.objects.count()
+        context['active_assessments'] = Assessment.objects.filter(is_active=True).count()
+        context['total_user_assessments'] = UserAssessment.objects.filter(is_completed=True).count()
+        return context
+
+class AdminAssessmentDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView):
+    """Admin view to see assessment details"""
+    model = Assessment
+    template_name = 'core/admin_assessment_detail.html'
+    pk_url_kwarg = 'assessment_id'
+    context_object_name = 'assessment'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        assessment = self.get_object()
+        context['questions'] = assessment.questions.all()
+        context['user_assessments'] = UserAssessment.objects.filter(
+            assessment=assessment, 
+            is_completed=True
+        ).count()
+        return context
+
+class AdminAssessmentCreateView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
+    """Admin view to create new assessments"""
+    template_name = 'core/admin_assessment_create.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = AssessmentForm()
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        form = AssessmentForm(request.POST)
+        
+        if form.is_valid():
+            assessment = form.save()
+            messages.success(
+                request,
+                f'Assessment "{assessment.title}" has been created successfully!'
+            )
+            return redirect('core:admin_assessment_detail', assessment_id=assessment.id)
+        
+        return self.render_to_response({'form': form})
+
+class AdminAssessmentEditView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
+    """Admin view to edit assessments"""
+    template_name = 'core/admin_assessment_edit.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        assessment_id = kwargs.get('assessment_id')
+        assessment = get_object_or_404(Assessment, id=assessment_id)
+        context['assessment'] = assessment
+        context['form'] = AssessmentForm(instance=assessment)
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        assessment_id = kwargs.get('assessment_id')
+        assessment = get_object_or_404(Assessment, id=assessment_id)
+        form = AssessmentForm(request.POST, instance=assessment)
+        
+        if form.is_valid():
+            form.save()
+            messages.success(
+                request,
+                f'Assessment "{assessment.title}" has been updated successfully!'
+            )
+            return redirect('core:admin_assessment_detail', assessment_id=assessment_id)
+        
+        return self.render_to_response({'form': form, 'assessment': assessment})
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def admin_delete_assessment(request, assessment_id):
+    """Delete an assessment"""
+    assessment = get_object_or_404(Assessment, id=assessment_id)
+    
+    # Check if assessment has been taken by users
+    user_assessment_count = UserAssessment.objects.filter(assessment=assessment).count()
+    
+    if user_assessment_count > 0:
+        messages.warning(
+            request,
+            f'Cannot delete "{assessment.title}" - it has been taken by {user_assessment_count} user(s). '
+            f'You can deactivate it instead.'
+        )
+        return redirect('core:admin_assessment_detail', assessment_id=assessment_id)
+    
+    title = assessment.title
+    assessment.delete()
+    messages.success(request, f'Assessment "{title}" has been deleted successfully.')
+    return redirect('core:admin_assessment_management')
+
+@login_required
+@user_passes_test(is_admin)
+@require_http_methods(["POST"])
+def admin_toggle_assessment_status(request, assessment_id):
+    """Toggle assessment active status"""
+    assessment = get_object_or_404(Assessment, id=assessment_id)
+    assessment.is_active = not assessment.is_active
+    assessment.save()
+    
+    status = "activated" if assessment.is_active else "deactivated"
+    messages.success(request, f'Assessment "{assessment.title}" has been {status}.')
+    
+    return redirect('core:admin_assessment_detail', assessment_id=assessment_id)

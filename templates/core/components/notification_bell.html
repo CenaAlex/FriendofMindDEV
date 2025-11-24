@@ -1,0 +1,257 @@
+<!-- Notification Bell -->
+<div class="relative" id="notificationBell">
+    <button onclick="toggleNotifications()" class="relative text-white hover:text-gray-300 transition">
+        <i class="fas fa-bell text-2xl"></i>
+        <span id="notificationBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">
+            0
+        </span>
+    </button>
+    
+    <!-- Notification Dropdown -->
+    <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-2xl z-50 max-h-[80vh] overflow-hidden flex flex-col">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 flex justify-between items-center">
+            <h3 class="font-semibold text-lg">Notifications</h3>
+            <button onclick="markAllAsRead()" class="text-sm hover:underline">
+                Mark all as read
+            </button>
+        </div>
+        
+        <!-- Loading State -->
+        <div id="notificationsLoading" class="p-8 text-center hidden">
+            <i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i>
+            <p class="text-gray-600 mt-2">Loading notifications...</p>
+        </div>
+        
+        <!-- Notifications List -->
+        <div id="notificationsList" class="overflow-y-auto flex-1">
+            <!-- Notifications will be inserted here -->
+        </div>
+        
+        <!-- Empty State -->
+        <div id="notificationsEmpty" class="hidden p-8 text-center">
+            <i class="fas fa-bell-slash text-4xl text-gray-400 mb-3"></i>
+            <p class="text-gray-600">No notifications</p>
+        </div>
+        
+        <!-- Footer -->
+        <div class="border-t p-3 bg-gray-50">
+            <a href="{% url 'core:notifications_list' %}" class="block text-center text-blue-600 hover:text-blue-800 font-semibold">
+                View All Notifications
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+let notificationsOpen = false;
+
+function toggleNotifications() {
+    const dropdown = document.getElementById('notificationDropdown');
+    notificationsOpen = !notificationsOpen;
+    
+    if (notificationsOpen) {
+        dropdown.classList.remove('hidden');
+        loadNotifications();
+    } else {
+        dropdown.classList.add('hidden');
+    }
+}
+
+function loadNotifications() {
+    const loading = document.getElementById('notificationsLoading');
+    const list = document.getElementById('notificationsList');
+    const empty = document.getElementById('notificationsEmpty');
+    
+    // Show loading
+    loading.classList.remove('hidden');
+    list.innerHTML = '';
+    empty.classList.add('hidden');
+    
+    fetch('{% url "core:get_notifications" %}')
+        .then(response => response.json())
+        .then(data => {
+            loading.classList.add('hidden');
+            
+            if (data.success) {
+                updateNotificationBadge(data.unread_count);
+                
+                if (data.notifications.length === 0) {
+                    empty.classList.remove('hidden');
+                } else {
+                    list.innerHTML = '';
+                    data.notifications.forEach(notif => {
+                        list.appendChild(createNotificationElement(notif));
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading notifications:', error);
+            loading.classList.add('hidden');
+            list.innerHTML = '<div class="p-4 text-center text-red-600">Failed to load notifications</div>';
+        });
+}
+
+function createNotificationElement(notif) {
+    const div = document.createElement('div');
+    div.className = `border-b hover:bg-gray-50 transition cursor-pointer ${notif.is_read ? 'bg-white' : 'bg-blue-50'}`;
+    div.onclick = () => handleNotificationClick(notif);
+    
+    const iconClass = getNotificationIcon(notif.type);
+    const iconColor = getNotificationColor(notif.type);
+    
+    div.innerHTML = `
+        <div class="p-4 flex">
+            <div class="flex-shrink-0 mr-3">
+                <div class="w-10 h-10 rounded-full ${iconColor} flex items-center justify-center">
+                    <i class="${iconClass} text-white"></i>
+                </div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-start mb-1">
+                    <p class="font-semibold text-gray-900 text-sm truncate">${notif.title}</p>
+                    ${!notif.is_read ? '<span class="ml-2 w-2 h-2 bg-blue-600 rounded-full flex-shrink-0"></span>' : ''}
+                </div>
+                <p class="text-gray-600 text-sm line-clamp-2">${notif.message}</p>
+                <p class="text-gray-400 text-xs mt-1">${notif.time_ago}</p>
+            </div>
+        </div>
+    `;
+    
+    return div;
+}
+
+function getNotificationIcon(type) {
+    const icons = {
+        'feedback_response': 'fas fa-reply',
+        'feedback_status': 'fas fa-check-circle',
+        'system': 'fas fa-info-circle',
+        'assessment': 'fas fa-clipboard-list',
+        'admin': 'fas fa-user-shield'
+    };
+    return icons[type] || 'fas fa-bell';
+}
+
+function getNotificationColor(type) {
+    const colors = {
+        'feedback_response': 'bg-blue-500',
+        'feedback_status': 'bg-green-500',
+        'system': 'bg-gray-500',
+        'assessment': 'bg-purple-500',
+        'admin': 'bg-red-500'
+    };
+    return colors[type] || 'bg-blue-500';
+}
+
+function handleNotificationClick(notif) {
+    // Mark as read
+    if (!notif.is_read) {
+        fetch(`/notifications/${notif.id}/read/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateNotificationBadge(data.unread_count);
+            }
+        });
+    }
+    
+    // Navigate to link if provided
+    if (notif.link_url) {
+        window.location.href = notif.link_url;
+    } else {
+        toggleNotifications();
+    }
+}
+
+function markAllAsRead() {
+    fetch('{% url "core:mark_all_notifications_read" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateNotificationBadge(0);
+            loadNotifications();
+        }
+    });
+}
+
+function updateNotificationBadge(count) {
+    const badge = document.getElementById('notificationBadge');
+    if (count > 0) {
+        badge.textContent = count > 99 ? '99+' : count;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const bell = document.getElementById('notificationBell');
+    const dropdown = document.getElementById('notificationDropdown');
+    
+    if (bell && !bell.contains(event.target)) {
+        dropdown.classList.add('hidden');
+        notificationsOpen = false;
+    }
+});
+
+// Auto-refresh notifications every 30 seconds
+setInterval(() => {
+    if (!notificationsOpen) {
+        fetch('{% url "core:get_notifications" %}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateNotificationBadge(data.unread_count);
+                }
+            });
+    }
+}, 30000);
+
+// Load initial badge count
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('{% url "core:get_notifications" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateNotificationBadge(data.unread_count);
+            }
+        });
+});
+</script>
+
+<style>
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>
+

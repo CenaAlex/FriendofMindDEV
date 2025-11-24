@@ -1,0 +1,288 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Organization - Admin{% endblock %}
+
+{% block content %}
+<div class="min-h-screen -mt-16 pt-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div class="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-8">
+
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-bold text-white mb-2">Edit Organization</h1>
+                    <p class="text-xl text-white opacity-90">{{ organization.organization_name }}</p>
+                </div>
+                <a href="{% url 'core:admin_organization_detail' organization.id %}" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition duration-300">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Organization
+                </a>
+            </div>
+        </div>
+
+        <!-- Edit Form -->
+        <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-8">
+            <form method="POST">
+                {% csrf_token %}
+                
+                {% if messages %}
+                <div class="mb-6">
+                    {% for message in messages %}
+                    <div class="bg-{% if message.tags == 'error' %}red{% else %}green{% endif %}-500 bg-opacity-20 border border-{% if message.tags == 'error' %}red{% else %}green{% endif %}-500 text-white px-4 py-3 rounded mb-2">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Basic Information -->
+                <h3 class="text-2xl font-bold text-white mb-4">Basic Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Organization Name -->
+                    <div class="md:col-span-2">
+                        <label for="{{ form.organization_name.id_for_label }}" class="block text-white font-medium mb-2">
+                            Organization Name <span class="text-red-400">*</span>
+                        </label>
+                        {{ form.organization_name }}
+                        {% if form.organization_name.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.organization_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Organization Type -->
+                    <div>
+                        <label for="{{ form.organization_type.id_for_label }}" class="block text-white font-medium mb-2">
+                            Organization Type <span class="text-red-400">*</span>
+                        </label>
+                        {{ form.organization_type }}
+                        {% if form.organization_type.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.organization_type.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- License Number -->
+                    <div>
+                        <label for="{{ form.license_number.id_for_label }}" class="block text-white font-medium mb-2">
+                            License Number
+                        </label>
+                        {{ form.license_number }}
+                        {% if form.license_number.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.license_number.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Location Information -->
+                <h3 class="text-2xl font-bold text-white mb-4 mt-8">Location Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Address -->
+                    <div class="md:col-span-2">
+                        <label for="{{ form.address.id_for_label }}" class="block text-white font-medium mb-2">
+                            Address <span class="text-red-400">*</span>
+                        </label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.address.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- City -->
+                    <div>
+                        <label for="{{ form.city.id_for_label }}" class="block text-white font-medium mb-2">
+                            City <span class="text-red-400">*</span>
+                        </label>
+                        {{ form.city }}
+                        {% if form.city.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.city.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- State -->
+                    <div>
+                        <label for="{{ form.state.id_for_label }}" class="block text-white font-medium mb-2">
+                            State/Province <span class="text-red-400">*</span>
+                        </label>
+                        {{ form.state }}
+                        {% if form.state.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.state.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- ZIP Code -->
+                    <div>
+                        <label for="{{ form.zip_code.id_for_label }}" class="block text-white font-medium mb-2">
+                            ZIP/Postal Code <span class="text-red-400">*</span>
+                        </label>
+                        {{ form.zip_code }}
+                        {% if form.zip_code.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.zip_code.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Country -->
+                    <div>
+                        <label for="{{ form.country.id_for_label }}" class="block text-white font-medium mb-2">
+                            Country <span class="text-red-400">*</span>
+                        </label>
+                        {{ form.country }}
+                        {% if form.country.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.country.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <h3 class="text-2xl font-bold text-white mb-4 mt-8">Contact Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Phone -->
+                    <div>
+                        <label for="{{ form.phone.id_for_label }}" class="block text-white font-medium mb-2">
+                            Phone <span class="text-red-400">*</span>
+                        </label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.phone.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label for="{{ form.email.id_for_label }}" class="block text-white font-medium mb-2">
+                            Email <span class="text-red-400">*</span>
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.email.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Website -->
+                    <div class="md:col-span-2">
+                        <label for="{{ form.website.id_for_label }}" class="block text-white font-medium mb-2">
+                            Website
+                        </label>
+                        {{ form.website }}
+                        {% if form.website.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.website.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Service Information -->
+                <h3 class="text-2xl font-bold text-white mb-4 mt-8">Service Information</h3>
+                <div class="grid grid-cols-1 gap-6">
+                    <!-- Description -->
+                    <div>
+                        <label for="{{ form.description.id_for_label }}" class="block text-white font-medium mb-2">
+                            Description
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.description.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Services Offered -->
+                    <div>
+                        <label for="{{ form.services_offered.id_for_label }}" class="block text-white font-medium mb-2">
+                            Services Offered
+                        </label>
+                        {{ form.services_offered }}
+                        {% if form.services_offered.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.services_offered.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Operating Hours -->
+                    <div>
+                        <label for="{{ form.operating_hours.id_for_label }}" class="block text-white font-medium mb-2">
+                            Operating Hours
+                        </label>
+                        {{ form.operating_hours }}
+                        {% if form.operating_hours.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.operating_hours.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Insurance Accepted -->
+                    <div>
+                        <label for="{{ form.insurance_accepted.id_for_label }}" class="block text-white font-medium mb-2">
+                            Insurance Accepted
+                        </label>
+                        {{ form.insurance_accepted }}
+                        {% if form.insurance_accepted.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.insurance_accepted.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Languages Spoken -->
+                    <div>
+                        <label for="{{ form.languages_spoken.id_for_label }}" class="block text-white font-medium mb-2">
+                            Languages Spoken
+                        </label>
+                        {{ form.languages_spoken }}
+                        {% if form.languages_spoken.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.languages_spoken.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Emergency Services -->
+                    <div class="flex items-center">
+                        {{ form.emergency_services }}
+                        <label for="{{ form.emergency_services.id_for_label }}" class="ml-2 text-white">
+                            Provides Emergency Services
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Verification -->
+                <div class="mt-8 pt-8 border-t border-gray-600">
+                    <h3 class="text-2xl font-bold text-white mb-4">Verification Status</h3>
+                    <div class="flex items-center">
+                        {{ form.is_verified }}
+                        <label for="{{ form.is_verified.id_for_label }}" class="ml-2 text-white">
+                            Organization is Verified
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="mt-8 flex justify-end space-x-4">
+                    <a href="{% url 'core:admin_organization_detail' organization.id %}" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition duration-300">
+                        Cancel
+                    </a>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition duration-300">
+                        <i class="fas fa-save mr-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0.5rem;
+        color: white;
+        transition: all 0.3s;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: rgba(59, 130, 246, 0.5);
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+    input[type="checkbox"] {
+        width: 1.25rem;
+        height: 1.25rem;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+

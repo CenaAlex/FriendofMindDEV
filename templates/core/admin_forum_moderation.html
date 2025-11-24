@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Forum Moderation - Admin{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 py-8">
+    <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-4xl font-bold text-white mb-2">Forum Moderation</h1>
+                <p class="text-gray-300">Manage reports and maintain a safe community</p>
+            </div>
+            <a href="{% url 'core:admin_dashboard' %}" class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Statistics -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm">Total Posts</p>
+                        <p class="text-3xl font-bold text-white mt-1">{{ total_posts }}</p>
+                    </div>
+                    <i class="fas fa-comments text-4xl text-blue-400"></i>
+                </div>
+            </div>
+
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm">Flagged Posts</p>
+                        <p class="text-3xl font-bold text-yellow-400 mt-1">{{ flagged_posts }}</p>
+                    </div>
+                    <i class="fas fa-flag text-4xl text-yellow-400"></i>
+                </div>
+            </div>
+
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm">Pending Reports</p>
+                        <p class="text-3xl font-bold text-red-400 mt-1">{{ pending_post_reports }}</p>
+                    </div>
+                    <i class="fas fa-exclamation-triangle text-4xl text-red-400"></i>
+                </div>
+            </div>
+
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm">Comment Reports</p>
+                        <p class="text-3xl font-bold text-orange-400 mt-1">{{ pending_comment_reports }}</p>
+                    </div>
+                    <i class="fas fa-comment-slash text-4xl text-orange-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <a href="{% url 'core:admin_post_reports' %}" class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700 hover:border-blue-500 transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-2">Post Reports</h3>
+                        <p class="text-gray-300">Review reported posts</p>
+                        <p class="text-yellow-400 font-bold mt-2">{{ pending_post_reports }} pending</p>
+                    </div>
+                    <i class="fas fa-file-alt text-4xl text-blue-400"></i>
+                </div>
+            </a>
+
+            <a href="{% url 'core:admin_comment_reports' %}" class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700 hover:border-purple-500 transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-2">Comment Reports</h3>
+                        <p class="text-gray-300">Review reported comments</p>
+                        <p class="text-orange-400 font-bold mt-2">{{ pending_comment_reports }} pending</p>
+                    </div>
+                    <i class="fas fa-comment text-4xl text-purple-400"></i>
+                </div>
+            </a>
+
+            <a href="{% url 'core:admin_all_posts' %}" class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700 hover:border-green-500 transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-2">All Posts</h3>
+                        <p class="text-gray-300">View and manage all posts</p>
+                        <p class="text-green-400 font-bold mt-2">{{ total_posts }} total</p>
+                    </div>
+                    <i class="fas fa-list text-4xl text-green-400"></i>
+                </div>
+            </a>
+        </div>
+
+        <!-- Recent Reports -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+                <h2 class="text-2xl font-bold text-white mb-4">Recent Post Reports</h2>
+                <div class="space-y-3">
+                    {% for report in recent_post_reports|slice:":5" %}
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="px-3 py-1 bg-red-600 text-white text-xs rounded-full">{{ report.get_reason_display }}</span>
+                            <span class="px-3 py-1 bg-yellow-600 text-white text-xs rounded-full">{{ report.get_status_display }}</span>
+                        </div>
+                        <p class="text-white text-sm mb-2">Post by: {{ report.post.author.username }}</p>
+                        <p class="text-gray-300 text-xs mb-2">{{ report.post.content|truncatewords:20 }}</p>
+                        <div class="flex justify-between items-center text-xs text-gray-400">
+                            <span>Reported: {{ report.created_at|timesince }} ago</span>
+                            <a href="{% url 'core:admin_review_post_report' report.id %}" class="text-blue-400 hover:text-blue-300">Review →</a>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-400 text-center py-4">No recent reports</p>
+                    {% endfor %}
+                </div>
+                {% if recent_post_reports.count > 5 %}
+                <a href="{% url 'core:admin_post_reports' %}" class="block mt-4 text-center text-blue-400 hover:text-blue-300">View All Reports →</a>
+                {% endif %}
+            </div>
+
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+                <h2 class="text-2xl font-bold text-white mb-4">Recent Comment Reports</h2>
+                <div class="space-y-3">
+                    {% for report in recent_comment_reports|slice:":5" %}
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="px-3 py-1 bg-orange-600 text-white text-xs rounded-full">{{ report.get_reason_display }}</span>
+                            <span class="px-3 py-1 bg-yellow-600 text-white text-xs rounded-full">{{ report.get_status_display }}</span>
+                        </div>
+                        <p class="text-white text-sm mb-2">Comment by: {{ report.comment.author.username }}</p>
+                        <p class="text-gray-300 text-xs mb-2">{{ report.comment.content|truncatewords:20 }}</p>
+                        <div class="flex justify-between items-center text-xs text-gray-400">
+                            <span>Reported: {{ report.created_at|timesince }} ago</span>
+                            <a href="{% url 'core:admin_review_comment_report' report.id %}" class="text-purple-400 hover:text-purple-300">Review →</a>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-400 text-center py-4">No recent reports</p>
+                    {% endfor %}
+                </div>
+                {% if recent_comment_reports.count > 5 %}
+                <a href="{% url 'core:admin_comment_reports' %}" class="block mt-4 text-center text-purple-400 hover:text-purple-300">View All Reports →</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

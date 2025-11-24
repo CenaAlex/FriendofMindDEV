@@ -235,3 +235,9 @@ class OrganizationAlert(models.Model):
     
     def __str__(self):
         return f"{self.get_alert_type_display()} - {self.title}"
+
+# Import feedback and notification models
+from .feedback_models import Feedback, FeedbackResponse, Notification
+
+# Import forum models
+from .forum_models import ForumPost, ForumComment, ForumLike, ForumReport, ForumCommentReport

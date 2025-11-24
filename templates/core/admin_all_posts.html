@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}All Forum Posts - Admin{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 py-8">
+    <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-4xl font-bold text-white">All Forum Posts</h1>
+                <p class="text-gray-300">{{ total_count }} total posts</p>
+            </div>
+            <a href="{% url 'core:admin_forum_moderation' %}" class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg">
+                <i class="fas fa-arrow-left mr-2"></i>Back
+            </a>
+        </div>
+
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg border border-gray-700 p-6">
+            <div class="space-y-4">
+                {% for post in posts %}
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 {% if post.is_flagged %}border-l-4 border-l-red-500{% endif %} {% if post.is_hidden %}opacity-50{% endif %}">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-white font-semibold">{{ post.author.username }}</p>
+                            <p class="text-gray-400 text-sm">{{ post.created_at|date:"M d, Y g:i A" }}</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            {% if post.is_flagged %}
+                            <span class="px-3 py-1 bg-red-600 text-white text-xs rounded-full">Flagged ({{ post.report_count }} reports)</span>
+                            {% endif %}
+                            {% if post.is_hidden %}
+                            <span class="px-3 py-1 bg-gray-600 text-white text-xs rounded-full">Hidden</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if post.content %}
+                    <p class="text-gray-300 mb-4">{{ post.content|truncatewords:50 }}</p>
+                    {% endif %}
+                    
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex space-x-4 text-gray-400">
+                            <span><i class="fas fa-heart text-red-400"></i> {{ post.like_count }}</span>
+                            <span><i class="fas fa-comment text-blue-400"></i> {{ post.comment_count }}</span>
+                        </div>
+                        <a href="{% url 'core:forum_post_detail' post.id %}" class="text-blue-400 hover:text-blue-300">View Post →</a>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-400 text-center py-12">No posts found</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
