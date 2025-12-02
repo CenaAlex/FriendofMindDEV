@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ resource.title }} - Friend of Mind{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex justify-between items-start mb-6">
+        <div class="flex-1">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ resource.title }}</h1>
+            <div class="flex items-center gap-3 text-sm text-gray-600">
+                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                    {{ resource.get_resource_type_display }}
+                </span>
+                <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full">
+                    {{ resource.category.name }}
+                </span>
+                {% if resource.is_free %}
+                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full">Free</span>
+                {% endif %}
+                {% if resource.is_24_7 %}
+                <span class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full">24/7 Available</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Bookmark Button -->
+        <button id="bookmark-btn" 
+                data-resource-id="{{ resource.id }}"
+                data-bookmarked="{{ is_bookmarked|lower }}"
+                class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all {% if is_bookmarked %}bg-yellow-500 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+            <i class="{% if is_bookmarked %}fas{% else %}far{% endif %} fa-bookmark"></i>
+            <span id="bookmark-text">{% if is_bookmarked %}Bookmarked{% else %}Bookmark{% endif %}</span>
+        </button>
+    </div>
+
+    <!-- Admin Actions -->
+    {% if user.is_staff or user.is_superuser %}
+    <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <p class="text-sm text-yellow-800 mb-2"><strong>Admin Actions:</strong></p>
+        <div class="flex gap-2">
+            <a href="{% url 'mentalhealth:admin_resource_edit' resource.id %}" 
+               class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
+                <i class="fas fa-edit"></i> Edit Resource
+            </a>
+            <form action="{% url 'mentalhealth:admin_resource_toggle' resource.id %}" method="post" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="px-3 py-1 {% if resource.is_active %}bg-red-600 hover:bg-red-700{% else %}bg-green-600 hover:bg-green-700{% endif %} text-white rounded">
+                    <i class="fas fa-power-off"></i> {% if resource.is_active %}Deactivate{% else %}Activate{% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Description -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">About This Resource</h2>
+        <p class="text-gray-700 whitespace-pre-line">{{ resource.description }}</p>
+    </div>
+
+    <!-- Contact Information -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Contact Information</h2>
+        <div class="space-y-3">
+            {% if resource.url %}
+            <div class="flex items-center gap-3">
+                <i class="fas fa-globe text-blue-600 w-6"></i>
+                <a href="{{ resource.url }}" target="_blank" class="text-blue-600 hover:underline">
+                    Visit Website <i class="fas fa-external-link-alt text-xs"></i>
+                </a>
+            </div>
+            {% endif %}
+            
+            {% if resource.phone_number %}
+            <div class="flex items-center gap-3">
+                <i class="fas fa-phone text-green-600 w-6"></i>
+                <a href="tel:{{ resource.phone_number }}" class="text-gray-700 hover:text-green-600">
+                    {{ resource.phone_number }}
+                </a>
+            </div>
+            {% endif %}
+            
+            {% if resource.email %}
+            <div class="flex items-center gap-3">
+                <i class="fas fa-envelope text-purple-600 w-6"></i>
+                <a href="mailto:{{ resource.email }}" class="text-gray-700 hover:text-purple-600">
+                    {{ resource.email }}
+                </a>
+            </div>
+            {% endif %}
+            
+            {% if resource.address %}
+            <div class="flex items-start gap-3">
+                <i class="fas fa-map-marker-alt text-red-600 w-6 mt-1"></i>
+                <p class="text-gray-700">{{ resource.address }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Additional Information -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Additional Details</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% if resource.languages_supported %}
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Languages Supported</p>
+                <p class="text-gray-900">{{ resource.languages_supported }}</p>
+            </div>
+            {% endif %}
+            
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Availability</p>
+                <p class="text-gray-900">{% if resource.is_24_7 %}Available 24/7{% else %}Limited Hours{% endif %}</p>
+            </div>
+            
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Cost</p>
+                <p class="text-gray-900">{% if resource.is_free %}Free{% else %}Paid{% endif %}</p>
+            </div>
+            
+            {% if resource.is_verified %}
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Status</p>
+                <p class="text-green-600 flex items-center gap-1">
+                    <i class="fas fa-check-circle"></i> Verified
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex gap-3">
+        <a href="{% url 'mentalhealth:resource_list' %}" 
+           class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+            <i class="fas fa-arrow-left"></i> Back to Resources
+        </a>
+        <a href="{% url 'mentalhealth:report_resource' resource.id %}" 
+           class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700">
+            <i class="fas fa-flag"></i> Report Issue
+        </a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const bookmarkBtn = document.getElementById('bookmark-btn');
+    const bookmarkText = document.getElementById('bookmark-text');
+    
+    // Function to get CSRF token from cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    bookmarkBtn.addEventListener('click', function() {
+        const resourceId = this.dataset.resourceId;
+        const isBookmarked = this.dataset.bookmarked === 'true';
+        const csrftoken = getCookie('csrftoken');
+        
+        fetch(`/resources/bookmark/${resourceId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update button state
+                this.dataset.bookmarked = data.bookmarked;
+                
+                if (data.bookmarked) {
+                    this.classList.remove('bg-gray-100', 'text-gray-700');
+                    this.classList.add('bg-yellow-500', 'text-white');
+                    this.querySelector('i').classList.remove('far');
+                    this.querySelector('i').classList.add('fas');
+                    bookmarkText.textContent = 'Bookmarked';
+                } else {
+                    this.classList.remove('bg-yellow-500', 'text-white');
+                    this.classList.add('bg-gray-100', 'text-gray-700');
+                    this.querySelector('i').classList.remove('fas');
+                    this.querySelector('i').classList.add('far');
+                    bookmarkText.textContent = 'Bookmark';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to update bookmark. Please try again.');
+        });
+    });
+});
+</script>
+{% endblock %}
+

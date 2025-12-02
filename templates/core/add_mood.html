@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Log Your Mood - FriendofMind{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-lg shadow p-8">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-smile text-green-600 text-2xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">How are you feeling today?</h1>
+            <p class="text-gray-600">Track your daily mood to monitor your mental wellness journey</p>
+        </div>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div>
+                <label class="block text-lg font-medium text-gray-700 mb-4">Select your mood:</label>
+                <div class="grid grid-cols-1 gap-3">
+                    <label class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition duration-200">
+                        <input type="radio" name="mood" value="5" class="h-4 w-4 text-primary focus:ring-primary border-gray-300" required>
+                        <div class="ml-4 flex items-center">
+                            <span class="text-3xl mr-3">😄</span>
+                            <div>
+                                <div class="font-medium text-gray-900">Very Happy</div>
+                                <div class="text-sm text-gray-600">Feeling great, energetic, and positive</div>
+                            </div>
+                        </div>
+                    </label>
+                    
+                    <label class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition duration-200">
+                        <input type="radio" name="mood" value="4" class="h-4 w-4 text-primary focus:ring-primary border-gray-300" required>
+                        <div class="ml-4 flex items-center">
+                            <span class="text-3xl mr-3">😊</span>
+                            <div>
+                                <div class="font-medium text-gray-900">Happy</div>
+                                <div class="text-sm text-gray-600">Feeling good and content</div>
+                            </div>
+                        </div>
+                    </label>
+                    
+                    <label class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition duration-200">
+                        <input type="radio" name="mood" value="3" class="h-4 w-4 text-primary focus:ring-primary border-gray-300" required>
+                        <div class="ml-4 flex items-center">
+                            <span class="text-3xl mr-3">😐</span>
+                            <div>
+                                <div class="font-medium text-gray-900">Neutral</div>
+                                <div class="text-sm text-gray-600">Feeling okay, neither good nor bad</div>
+                            </div>
+                        </div>
+                    </label>
+                    
+                    <label class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition duration-200">
+                        <input type="radio" name="mood" value="2" class="h-4 w-4 text-primary focus:ring-primary border-gray-300" required>
+                        <div class="ml-4 flex items-center">
+                            <span class="text-3xl mr-3">😔</span>
+                            <div>
+                                <div class="font-medium text-gray-900">Sad</div>
+                                <div class="text-sm text-gray-600">Feeling down or low</div>
+                            </div>
+                        </div>
+                    </label>
+                    
+                    <label class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition duration-200">
+                        <input type="radio" name="mood" value="1" class="h-4 w-4 text-primary focus:ring-primary border-gray-300" required>
+                        <div class="ml-4 flex items-center">
+                            <span class="text-3xl mr-3">😢</span>
+                            <div>
+                                <div class="font-medium text-gray-900">Very Sad</div>
+                                <div class="text-sm text-gray-600">Feeling very low, depressed, or overwhelmed</div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            
+            <div>
+                <label for="id_notes" class="block text-lg font-medium text-gray-700 mb-2">Notes (optional)</label>
+                {{ form.notes }}
+                <p class="mt-2 text-sm text-gray-500">Share what's on your mind or what contributed to your mood today</p>
+            </div>
+            
+            {% if form.errors %}
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <div class="flex justify-between pt-6">
+                <a href="{% url 'core:dashboard' %}" 
+                   class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg transition duration-200">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                </a>
+                <button type="submit" 
+                        class="bg-primary hover:bg-blue-700 text-white px-8 py-3 rounded-lg transition duration-200">
+                    <i class="fas fa-save mr-2"></i>Save Mood Entry
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tips -->
+    <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h3 class="text-lg font-medium text-blue-800 mb-2">💡 Mood Tracking Tips</h3>
+        <ul class="text-sm text-blue-700 space-y-1">
+            <li>• Try to log your mood at the same time each day</li>
+            <li>• Be honest about how you're feeling - there are no wrong answers</li>
+            <li>• Use the notes section to track patterns or triggers</li>
+            <li>• Review your mood history to identify trends over time</li>
+        </ul>
+    </div>
+</div>
+
+<style>
+.form-input {
+    @apply appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm;
+}
+</style>
+{% endblock %}

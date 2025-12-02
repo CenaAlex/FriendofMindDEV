@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}Analytics & Reports - Admin{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="min-h-screen -mt-16 pt-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div class="max-w-8xl mx-auto px-16 sm:px-20 lg:px-24 py-8">
+
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-bold text-white mb-2">Analytics & Reports</h1>
+                    <p class="text-xl text-white opacity-90">System insights and data analytics</p>
+                </div>
+                <a href="{% url 'core:admin_dashboard' %}" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition duration-300">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Overview Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-white">
+                <div class="text-center">
+                    <h3 class="text-3xl font-bold">{{ total_users }}</h3>
+                    <p class="text-lg">Total Users</p>
+                </div>
+            </div>
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-white">
+                <div class="text-center">
+                    <h3 class="text-3xl font-bold">{{ total_organizations }}</h3>
+                    <p class="text-lg">Organizations</p>
+                </div>
+            </div>
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-white">
+                <div class="text-center">
+                    <h3 class="text-3xl font-bold">{{ total_assessments }}</h3>
+                    <p class="text-lg">Assessments</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- User Growth Chart -->
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-white mb-6">User Growth (Last 12 Months)</h2>
+                <div class="h-64 flex items-end justify-between space-x-2">
+                    {% for month, count in monthly_users.items %}
+                    <div class="flex flex-col items-center">
+                        <div class="bg-blue-500 rounded-t" style="height: {% if count %}{{ count|add:1|add:1|add:1|add:1 }}{% else %}4{% endif %}px; width: 20px;"></div>
+                        <span class="text-xs text-gray-300 mt-2">{{ month|slice:":7" }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-4 text-sm text-gray-300">
+                    <p>Total new users: {{ monthly_users|length }} months tracked</p>
+                </div>
+            </div>
+
+            <!-- Assessment Types Distribution -->
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-white mb-6">Assessment Types</h2>
+                {% if assessment_types %}
+                    <div class="space-y-4">
+                        {% for type, count in assessment_types.items %}
+                        <div class="flex justify-between items-center">
+                            <span class="text-white">{{ type|title }}</span>
+                            <div class="flex items-center">
+                                <div class="w-32 bg-gray-700 rounded-full h-2 mr-3">
+                                    <div class="bg-blue-500 h-2 rounded-full" style="width: {% if total_assessments %}{% widthratio count total_assessments 100 %}{% else %}0{% endif %}%"></div>
+                                </div>
+                                <span class="text-gray-300 text-sm">{{ count }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-gray-300 py-8">
+                        <i class="fas fa-chart-pie text-4xl mb-4"></i>
+                        <p>No assessment data available</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Severity Distribution -->
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-white mb-6">Severity Distribution</h2>
+                {% if severity_distribution %}
+                    <div class="space-y-4">
+                        {% for level, count in severity_distribution.items %}
+                        <div class="flex justify-between items-center">
+                            <span class="text-white">{{ level|title }}</span>
+                            <div class="flex items-center">
+                                <div class="w-32 bg-gray-700 rounded-full h-2 mr-3">
+                                    <div class="h-2 rounded-full {% if 'severe' in level %}bg-red-500{% elif 'moderate' in level %}bg-yellow-500{% else %}bg-green-500{% endif %}" 
+                                         style="width: {% if total_assessments %}{% widthratio count total_assessments 100 %}{% else %}0{% endif %}%"></div>
+                                </div>
+                                <span class="text-gray-300 text-sm">{{ count }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-gray-300 py-8">
+                        <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                        <p>No severity data available</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Organization Types -->
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-white mb-6">Organization Types</h2>
+                {% if org_types %}
+                    <div class="space-y-4">
+                        {% for type, count in org_types.items %}
+                        <div class="flex justify-between items-center">
+                            <span class="text-white">{{ type|title }}</span>
+                            <div class="flex items-center">
+                                <div class="w-32 bg-gray-700 rounded-full h-2 mr-3">
+                                    <div class="bg-purple-500 h-2 rounded-full" style="width: {% if organizations %}{% widthratio count organizations 100 %}{% else %}0{% endif %}%"></div>
+                                </div>
+                                <span class="text-gray-300 text-sm">{{ count }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-gray-300 py-8">
+                        <i class="fas fa-building text-4xl mb-4"></i>
+                        <p>No organization data available</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Additional Analytics -->
+        <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Quick Actions -->
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold text-white mb-4">Quick Actions</h2>
+                <div class="space-y-3">
+                    <a href="{% url 'core:admin_user_management' %}" class="block bg-slate-700 rounded-lg p-4 text-white hover:bg-slate-600 transition duration-300">
+                        <div class="flex items-center">
+                            <i class="fas fa-users text-xl mr-3"></i>
+                            <span>Manage Users</span>
+                        </div>
+                    </a>
+                    <a href="{% url 'core:admin_organization_management' %}" class="block bg-slate-700 rounded-lg p-4 text-white hover:bg-slate-600 transition duration-300">
+                        <div class="flex items-center">
+                            <i class="fas fa-building text-xl mr-3"></i>
+                            <span>Manage Organizations</span>
+                        </div>
+                    </a>
+                    <a href="/admin/" class="block bg-slate-700 rounded-lg p-4 text-white hover:bg-slate-600 transition duration-300">
+                        <div class="flex items-center">
+                            <i class="fas fa-cog text-xl mr-3"></i>
+                            <span>Django Admin</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- System Health -->
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold text-white mb-4">System Health</h2>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-300">Total Users</span>
+                        <span class="text-green-400 font-medium">{{ total_users }}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-300">Organizations</span>
+                        <span class="text-blue-400 font-medium">{{ total_organizations }}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-300">Assessments</span>
+                        <span class="text-purple-400 font-medium">{{ total_assessments }}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-300">System Status</span>
+                        <span class="text-green-400 font-medium">Healthy</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold text-white mb-4">Recent Activity</h2>
+                <div class="space-y-3">
+                    <div class="flex items-center text-sm">
+                        <i class="fas fa-chart-line text-blue-400 mr-3"></i>
+                        <span class="text-gray-200">Analytics generated</span>
+                    </div>
+                    <div class="flex items-center text-sm">
+                        <i class="fas fa-database text-green-400 mr-3"></i>
+                        <span class="text-gray-200">Data updated</span>
+                    </div>
+                    <div class="flex items-center text-sm">
+                        <i class="fas fa-shield-alt text-purple-400 mr-3"></i>
+                        <span class="text-gray-200">System secured</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

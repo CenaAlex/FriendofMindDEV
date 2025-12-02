@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Feedback Detail - Admin{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 py-8">
+    <div class="container mx-auto px-4 max-w-5xl">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-4xl font-bold text-white mb-2">Feedback Details</h1>
+                <p class="text-gray-300">Review and respond to feedback</p>
+            </div>
+            <a href="{% url 'core:admin_feedback_management' %}" class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg transition">
+                <i class="fas fa-arrow-left mr-2"></i>Back to List
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Content -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Feedback Info -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <span class="px-3 py-1 rounded-full text-sm font-semibold
+                                {% if feedback.feedback_type == 'bug' %}bg-red-600 text-white
+                                {% elif feedback.feedback_type == 'feature' %}bg-purple-600 text-white
+                                {% elif feedback.feedback_type == 'issue' %}bg-orange-600 text-white
+                                {% else %}bg-blue-600 text-white{% endif %}">
+                                {{ feedback.get_feedback_type_display }}
+                            </span>
+                        </div>
+                        <div class="text-right text-sm text-gray-400">
+                            {{ feedback.created_at|date:"F d, Y \a\t g:i A" }}
+                        </div>
+                    </div>
+
+                    <h2 class="text-2xl font-bold text-white mb-4">{{ feedback.subject }}</h2>
+
+                    <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4 mb-4">
+                        <p class="text-gray-200 whitespace-pre-wrap">{{ feedback.message }}</p>
+                    </div>
+
+                    <div class="flex items-center space-x-4 text-sm">
+                        <div class="flex items-center text-gray-300">
+                            <i class="fas fa-user mr-2"></i>
+                            <span class="font-semibold">{{ feedback.user.get_full_name|default:feedback.user.username }}</span>
+                        </div>
+                        <div class="flex items-center text-gray-300">
+                            <i class="fas fa-envelope mr-2"></i>
+                            <a href="mailto:{{ feedback.user.email }}" class="hover:text-blue-400">{{ feedback.user.email }}</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Responses -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold text-white mb-4">
+                        <i class="fas fa-comments mr-2"></i>Responses ({{ responses.count }})
+                    </h3>
+
+                    {% if responses %}
+                        <div class="space-y-4">
+                            {% for response in responses %}
+                            <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4 {% if response.is_internal_note %}border-l-4 border-yellow-500{% else %}border-l-4 border-blue-500{% endif %}">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-semibold text-white">{{ response.admin_user.get_full_name|default:response.admin_user.username }}</span>
+                                        {% if response.is_internal_note %}
+                                            <span class="px-2 py-1 bg-yellow-600 text-white text-xs rounded-full">Internal Note</span>
+                                        {% else %}
+                                            <span class="px-2 py-1 bg-blue-600 text-white text-xs rounded-full">Sent to User</span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="text-sm text-gray-400">{{ response.created_at|date:"M d, Y g:i A" }}</span>
+                                </div>
+                                <p class="text-gray-200 whitespace-pre-wrap">{{ response.message }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-400 text-center py-8">No responses yet</p>
+                    {% endif %}
+
+                    <!-- Add Response Form -->
+                    <form method="post" class="mt-6">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="respond">
+                        
+                        <div class="mb-4">
+                            <label class="block text-white mb-2 font-semibold">Your Response</label>
+                            <textarea name="message" rows="4" required 
+                                      class="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-600 focus:ring-2 focus:ring-blue-500" 
+                                      placeholder="Type your response here..."></textarea>
+                        </div>
+
+                        <div class="flex items-center mb-4">
+                            <input type="checkbox" name="is_internal_note" id="is_internal_note" class="mr-2">
+                            <label for="is_internal_note" class="text-gray-300 text-sm">
+                                Internal note (not visible to user)
+                            </label>
+                        </div>
+
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition">
+                            <i class="fas fa-paper-plane mr-2"></i>Send Response
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- Status & Priority -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-lg font-bold text-white mb-4">Update Status</h3>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_status">
+                        
+                        <div class="mb-4">
+                            <label class="block text-white mb-2">Status</label>
+                            <select name="status" class="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-600">
+                                <option value="pending" {% if feedback.status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="in_review" {% if feedback.status == 'in_review' %}selected{% endif %}>In Review</option>
+                                <option value="resolved" {% if feedback.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                                <option value="closed" {% if feedback.status == 'closed' %}selected{% endif %}>Closed</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-white mb-2">Priority</label>
+                            <select name="priority" class="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-600">
+                                <option value="low" {% if feedback.priority == 'low' %}selected{% endif %}>Low</option>
+                                <option value="medium" {% if feedback.priority == 'medium' %}selected{% endif %}>Medium</option>
+                                <option value="high" {% if feedback.priority == 'high' %}selected{% endif %}>High</option>
+                                <option value="urgent" {% if feedback.priority == 'urgent' %}selected{% endif %}>Urgent</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
+                            <i class="fas fa-save mr-2"></i>Update
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Feedback Info -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-lg font-bold text-white mb-4">Information</h3>
+                    
+                    <div class="space-y-3 text-sm">
+                        <div>
+                            <p class="text-gray-400">Current Status</p>
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold inline-block mt-1
+                                {% if feedback.status == 'pending' %}bg-yellow-600 text-white
+                                {% elif feedback.status == 'in_review' %}bg-blue-600 text-white
+                                {% elif feedback.status == 'resolved' %}bg-green-600 text-white
+                                {% else %}bg-gray-600 text-white{% endif %}">
+                                {{ feedback.get_status_display }}
+                            </span>
+                        </div>
+
+                        <div>
+                            <p class="text-gray-400">Current Priority</p>
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold inline-block mt-1
+                                {% if feedback.priority == 'urgent' %}bg-red-600 text-white
+                                {% elif feedback.priority == 'high' %}bg-orange-600 text-white
+                                {% elif feedback.priority == 'medium' %}bg-yellow-600 text-white
+                                {% else %}bg-gray-600 text-white{% endif %}">
+                                {{ feedback.get_priority_display }}
+                            </span>
+                        </div>
+
+                        <div>
+                            <p class="text-gray-400">Created</p>
+                            <p class="text-white">{{ feedback.created_at|date:"M d, Y g:i A" }}</p>
+                        </div>
+
+                        {% if feedback.resolved_at %}
+                        <div>
+                            <p class="text-gray-400">Resolved</p>
+                            <p class="text-white">{{ feedback.resolved_at|date:"M d, Y g:i A" }}</p>
+                            {% if feedback.resolved_by %}
+                                <p class="text-gray-300 text-xs">by {{ feedback.resolved_by.get_full_name|default:feedback.resolved_by.username }}</p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <div>
+                            <p class="text-gray-400">Last Updated</p>
+                            <p class="text-white">{{ feedback.updated_at|date:"M d, Y g:i A" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

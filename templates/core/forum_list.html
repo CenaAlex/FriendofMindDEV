@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Community Forum{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 py-8">
+    <div class="container mx-auto px-4 max-w-4xl">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">Community Forum</h1>
+            <p class="text-gray-300">Share your thoughts, experiences, and connect with others</p>
+            <p class="text-sm text-gray-400 mt-2">📊 {{ total_posts }} posts</p>
+        </div>
+
+        <!-- Create Post Card -->
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 mb-6 border border-gray-700">
+            <form method="post" action="{% url 'core:forum_create_post' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="flex items-start space-x-4">
+                    <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                        <span class="text-white font-bold">{{ request.user.first_name.0|default:request.user.username.0|upper }}</span>
+                    </div>
+                    <div class="flex-1">
+                        {{ post_form.content }}
+                        {% if post_form.content.errors %}
+                            <p class="text-red-400 text-sm mt-1">{{ post_form.content.errors.0 }}</p>
+                        {% endif %}
+                        
+                        <!-- Image Preview -->
+                        <div id="imagePreview" class="hidden mt-4">
+                            <img id="previewImg" src="" alt="Preview" class="max-w-full h-auto rounded-lg">
+                            <button type="button" onclick="removeImage()" class="mt-2 text-red-400 hover:text-red-300 text-sm">
+                                <i class="fas fa-times mr-1"></i>Remove Image
+                            </button>
+                        </div>
+                        
+                        <div class="flex justify-between items-center mt-4">
+                            <div class="flex space-x-2">
+                                <label for="imageInput" class="cursor-pointer bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+                                    <i class="fas fa-image mr-2"></i>Add Image
+                                </label>
+                                {{ post_form.image }}
+                            </div>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition">
+                                <i class="fas fa-paper-plane mr-2"></i>Post
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Posts List -->
+        <div class="space-y-4">
+            {% for post in posts %}
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700 hover:border-gray-600 transition">
+                <!-- Post Header -->
+                <div class="flex items-start space-x-4 mb-4">
+                    <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                        <!-- Anonymous avatar (still unique per post but not showing identity) -->
+                        <span class="text-white font-bold">A</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-semibold text-white">Anonymous</h3>
+                                <p class="text-sm text-gray-400">{{ post.created_at|timesince }} ago{% if post.is_edited %} <span class="text-gray-500">(edited)</span>{% endif %}</p>
+                            </div>
+                            {% if post.author == request.user or request.user.is_staff or request.user.is_superuser %}
+                            <div class="relative group">
+                                <button class="text-gray-400 hover:text-white">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                                    <a href="{% url 'core:forum_edit_post' post.id %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-edit mr-2"></i>Edit
+                                    </a>
+                                    <a href="{% url 'core:forum_delete_post' post.id %}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                        <i class="fas fa-trash mr-2"></i>Delete
+                                    </a>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Post Content -->
+                <a href="{% url 'core:forum_post_detail' post.id %}" class="block">
+                    {% if post.content %}
+                    <p class="text-white mb-4 whitespace-pre-wrap">{{ post.content }}</p>
+                    {% endif %}
+                    
+                    {% if post.image %}
+                    <img src="{{ post.image.url }}" alt="Post image" class="max-w-full h-auto rounded-lg mb-4">
+                    {% endif %}
+                </a>
+
+                <!-- Post Actions -->
+                <div class="flex items-center justify-between pt-4 border-t border-gray-600">
+                    <div class="flex space-x-6">
+                        <button onclick="likePost({{ post.id }}, event)" class="flex items-center space-x-2 text-gray-400 hover:text-red-400 transition">
+                            <i class="far fa-heart" id="heart-{{ post.id }}"></i>
+                            <span id="like-count-{{ post.id }}">{{ post.like_count }}</span>
+                        </button>
+                        <a href="{% url 'core:forum_post_detail' post.id %}" class="flex items-center space-x-2 text-gray-400 hover:text-blue-400 transition">
+                            <i class="far fa-comment"></i>
+                            <span>{{ post.comment_count }}</span>
+                        </a>
+                    </div>
+                    <a href="{% url 'core:forum_report_post' post.id %}" class="text-gray-400 hover:text-yellow-400 transition text-sm">
+                        <i class="fas fa-flag mr-1"></i>Report
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-12 text-center border border-gray-700">
+                <i class="fas fa-comments text-6xl text-gray-600 mb-4"></i>
+                <p class="text-gray-400 text-lg">No posts yet. Be the first to share!</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="mt-8 flex justify-center">
+            <nav class="flex space-x-2">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">Previous</a>
+                {% endif %}
+                <span class="px-4 py-2 bg-blue-600 text-white rounded-lg">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600">Next</a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Image preview
+document.getElementById('imageInput')?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('imagePreview').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+function removeImage() {
+    document.getElementById('imageInput').value = '';
+    document.getElementById('imagePreview').classList.add('hidden');
+}
+
+function likePost(postId, event) {
+    event.preventDefault();
+    fetch(`/forum/post/${postId}/like/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const likeCount = document.getElementById(`like-count-${postId}`);
+            likeCount.textContent = data.like_count;
+            
+            const heartIcon = document.getElementById(`heart-${postId}`);
+            if (data.liked) {
+                heartIcon.classList.remove('far', 'text-gray-400');
+                heartIcon.classList.add('fas', 'text-red-500');
+            } else {
+                heartIcon.classList.remove('fas', 'text-red-500');
+                heartIcon.classList.add('far', 'text-gray-400');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+</script>
+{% endblock %}
+

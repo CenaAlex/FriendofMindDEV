@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block title %}User Details - Admin{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="min-h-screen -mt-16 pt-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div class="max-w-8xl mx-auto px-16 sm:px-20 lg:px-24 py-8">
+
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-bold text-white mb-2">User Details</h1>
+                    <p class="text-xl text-white opacity-90">{{ user_detail.get_full_name|default:user_detail.username }}</p>
+                </div>
+                <a href="{% url 'core:admin_user_management' %}" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition duration-300">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Users
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- User Information -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Basic Information -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-8">
+                    <h2 class="text-2xl font-bold text-white mb-6">Basic Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Username</label>
+                            <p class="text-white">{{ user_detail.username }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Email</label>
+                            <p class="text-white">{{ user_detail.email }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Full Name</label>
+                            <p class="text-white">{{ user_detail.get_full_name|default:"Not provided" }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Role</label>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if user_detail.role == 'organization' %}bg-purple-100 text-purple-800
+                                {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                {{ user_detail.get_role_display }}
+                            </span>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Status</label>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if user.is_active %}bg-green-100 text-green-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Date Joined</label>
+                            <p class="text-white">{{ user.date_joined|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assessment History -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-8">
+                    <h2 class="text-2xl font-bold text-white mb-6">Assessment History</h2>
+                    {% if assessments %}
+                        <div class="space-y-4">
+                            {% for assessment in assessments %}
+                            <div class="bg-white bg-opacity-5 rounded-lg p-4">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-white">{{ assessment.assessment.name|title }} Assessment</h3>
+                                        <p class="text-sm text-gray-300">Completed: {{ assessment.completed_at|date:"M d, Y" }}</p>
+                                    </div>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                        Completed
+                                    </span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-gray-300 py-8">
+                            <i class="fas fa-clipboard-list text-4xl mb-4"></i>
+                            <p>No assessments completed</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Mood History -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-8">
+                    <h2 class="text-2xl font-bold text-white mb-6">Recent Mood Entries</h2>
+                    {% if mood_entries %}
+                        <div class="space-y-3">
+                            {% for mood in mood_entries %}
+                            <div class="bg-white bg-opacity-5 rounded-lg p-3">
+                                <div class="flex justify-between items-center">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="text-2xl">
+                                            {% if mood.mood == 1 %}😢
+                                            {% elif mood.mood == 2 %}😔
+                                            {% elif mood.mood == 3 %}😐
+                                            {% elif mood.mood == 4 %}😊
+                                            {% else %}😄{% endif %}
+                                        </span>
+                                        <div>
+                                            <p class="text-white font-medium">{{ mood.get_mood_display }}</p>
+                                            <p class="text-sm text-gray-300">{{ mood.date|date:"M d, Y" }}</p>
+                                        </div>
+                                    </div>
+                                    {% if mood.notes %}
+                                    <div class="text-sm text-gray-300 max-w-xs truncate">
+                                        "{{ mood.notes }}"
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-gray-300 py-8">
+                            <i class="fas fa-smile text-4xl mb-4"></i>
+                            <p>No mood entries recorded</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-8">
+                <!-- User Actions -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-white mb-4">User Actions</h2>
+                    <div class="space-y-3">
+                        <a href="{% url 'core:admin_user_edit' user_detail.id %}" 
+                           class="block bg-blue-600 hover:bg-blue-700 rounded-lg p-4 text-white transition duration-300">
+                            <div class="flex items-center">
+                                <i class="fas fa-edit text-xl mr-3"></i>
+                                <span>Edit User Profile</span>
+                            </div>
+                        </a>
+                        <form method="POST" action="{% url 'core:admin_toggle_user_status' user_detail.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" 
+                               class="w-full {% if user_detail.is_active %}bg-red-600 hover:bg-red-700{% else %}bg-green-600 hover:bg-green-700{% endif %} rounded-lg p-4 text-white transition duration-300"
+                               >
+                                <div class="flex items-center">
+                                    <i class="fas fa-{% if user_detail.is_active %}ban{% else %}check{% endif %} text-xl mr-3"></i>
+                                    <span>{% if user_detail.is_active %}Deactivate User{% else %}Activate User{% endif %}</span>
+                                </div>
+                            </button>
+                        </form>
+                        <a href="mailto:{{ user_detail.email }}" class="block bg-indigo-600 hover:bg-indigo-700 rounded-lg p-4 text-white transition duration-300">
+                            <div class="flex items-center">
+                                <i class="fas fa-envelope text-xl mr-3"></i>
+                                <span>Send Email</span>
+                            </div>
+                        </a>
+                        <form method="POST" action="{% url 'core:admin_delete_user' user_detail.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" 
+                               class="w-full bg-rose-600 hover:bg-rose-700 rounded-lg p-4 text-white transition duration-300"
+                               >
+                                <div class="flex items-center">
+                                    <i class="fas fa-trash text-xl mr-3"></i>
+                                    <span>Delete User Account</span>
+                                </div>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Organization Info (if applicable) -->
+                {% if user.role == 'organization' and organization %}
+                <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-white mb-4">Organization Info</h2>
+                    <div class="space-y-3 text-sm">
+                        <div>
+                            <span class="text-gray-300">Name:</span>
+                            <span class="text-white ml-2">{{ organization.organization_name }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-300">Type:</span>
+                            <span class="text-white ml-2">{{ organization.get_organization_type_display }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-300">Location:</span>
+                            <span class="text-white ml-2">{{ organization.city }}, {{ organization.state }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-300">Status:</span>
+                            <span class="text-white ml-2">
+                                {% if organization.is_verified %}
+                                    <span class="text-green-400">Verified</span>
+                                {% else %}
+                                    <span class="text-yellow-400">Pending</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- User Stats -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-white mb-4">User Statistics</h2>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-300">Assessments Completed</span>
+                            <span class="text-blue-400 font-medium">{{ assessments.count }}</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-300">Mood Entries</span>
+                            <span class="text-green-400 font-medium">{{ mood_entries.count }}</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-300">Account Status</span>
+                            <span class="{% if user.is_active %}text-green-400{% else %}text-red-400{% endif %} font-medium">
+                                {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

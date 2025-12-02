@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ assessment.title }} - FriendofMind{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ assessment.title }}</h1>
+            <p class="text-gray-600">{{ assessment.instructions }}</p>
+        </div>
+
+        <form method="post" class="space-y-8">
+            {% csrf_token %}
+            
+            {% for question in questions %}
+            <div class="bg-gray-50 rounded-lg p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">
+                    {{ forloop.counter }}. {{ question.text }}
+                </h3>
+                
+                <div class="space-y-3">
+                    {% for choice in question.choices.all %}
+                    <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-white cursor-pointer transition duration-200">
+                        <input type="radio" name="question_{{ question.id }}" value="{{ choice.id }}" 
+                               class="h-4 w-4 text-primary focus:ring-primary border-gray-300" required>
+                        <span class="ml-3 text-gray-700">{{ choice.text }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+            
+            <div class="flex justify-between pt-6">
+                <a href="{% url 'screening:assessment_list' %}" 
+                   class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg transition duration-200">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Assessments
+                </a>
+                <button type="submit" 
+                        class="bg-primary hover:bg-blue-700 text-white px-8 py-3 rounded-lg transition duration-200">
+                    Complete Assessment
+                    <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="mt-8 text-center">
+        <div class="flex items-center justify-center space-x-2 text-sm text-gray-500">
+            <i class="fas fa-lock"></i>
+            <span>Your responses are confidential and secure</span>
+        </div>
+    </div>
+</div>
+
+<script>
+// Simple progress tracking
+document.addEventListener('DOMContentLoaded', function() {
+    const radioInputs = document.querySelectorAll('input[type="radio"]');
+    const submitButton = document.querySelector('button[type="submit"]');
+    
+    function updateProgress() {
+        const questions = document.querySelectorAll('[name^="question_"]');
+        const questionNames = [...new Set(Array.from(questions).map(q => q.name))];
+        const answered = questionNames.filter(name => 
+            document.querySelector(`input[name="${name}"]:checked`)
+        ).length;
+        
+        const progress = (answered / questionNames.length) * 100;
+        console.log(`Progress: ${answered}/${questionNames.length} (${progress.toFixed(1)}%)`);
+    }
+    
+    radioInputs.forEach(input => {
+        input.addEventListener('change', updateProgress);
+    });
+});
+</script>
+{% endblock %}

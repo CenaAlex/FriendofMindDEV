@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Notifications{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 py-8">
+    <div class="container mx-auto px-4 max-w-4xl">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-4xl font-bold text-white mb-2">Notifications</h1>
+                <p class="text-gray-300">Stay updated with your account activity</p>
+            </div>
+            {% if unread_count > 0 %}
+            <button onclick="markAllAsRead()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition">
+                <i class="fas fa-check-double mr-2"></i>Mark All as Read
+            </button>
+            {% endif %}
+        </div>
+
+        <!-- Statistics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm">Total Notifications</p>
+                        <p class="text-3xl font-bold text-white mt-1">{{ notifications.count }}</p>
+                    </div>
+                    <i class="fas fa-bell text-4xl text-blue-400"></i>
+                </div>
+            </div>
+
+            <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 border border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm">Unread</p>
+                        <p class="text-3xl font-bold text-yellow-400 mt-1">{{ unread_count }}</p>
+                    </div>
+                    <i class="fas fa-envelope text-4xl text-yellow-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications List -->
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg border border-gray-700">
+            {% if notifications %}
+                <div class="divide-y divide-gray-700">
+                    {% for notif in notifications %}
+                    <div class="p-5 hover:bg-white hover:bg-opacity-5 transition {% if not notif.is_read %}bg-blue-900 bg-opacity-20{% endif %}" 
+                         onclick="handleNotificationClick({{ notif.id }}, '{{ notif.link_url }}')" 
+                         style="cursor: pointer;">
+                        <div class="flex items-start">
+                            <!-- Icon -->
+                            <div class="flex-shrink-0 mr-4">
+                                <div class="w-12 h-12 rounded-full flex items-center justify-center
+                                    {% if notif.notification_type == 'feedback_response' %}bg-blue-500
+                                    {% elif notif.notification_type == 'feedback_status' %}bg-green-500
+                                    {% elif notif.notification_type == 'system' %}bg-gray-500
+                                    {% elif notif.notification_type == 'assessment' %}bg-purple-500
+                                    {% elif notif.notification_type == 'admin' %}bg-red-500
+                                    {% else %}bg-blue-500{% endif %}">
+                                    {% if notif.notification_type == 'feedback_response' %}
+                                        <i class="fas fa-reply text-white text-lg"></i>
+                                    {% elif notif.notification_type == 'feedback_status' %}
+                                        <i class="fas fa-check-circle text-white text-lg"></i>
+                                    {% elif notif.notification_type == 'system' %}
+                                        <i class="fas fa-info-circle text-white text-lg"></i>
+                                    {% elif notif.notification_type == 'assessment' %}
+                                        <i class="fas fa-clipboard-list text-white text-lg"></i>
+                                    {% elif notif.notification_type == 'admin' %}
+                                        <i class="fas fa-user-shield text-white text-lg"></i>
+                                    {% else %}
+                                        <i class="fas fa-bell text-white text-lg"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Content -->
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start mb-1">
+                                    <h3 class="font-semibold text-white text-lg">{{ notif.title }}</h3>
+                                    {% if not notif.is_read %}
+                                        <span class="ml-2 w-3 h-3 bg-blue-500 rounded-full flex-shrink-0"></span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-gray-300 mb-2">{{ notif.message }}</p>
+                                <div class="flex items-center justify-between">
+                                    <p class="text-sm text-gray-400">
+                                        <i class="far fa-clock mr-1"></i>
+                                        {{ notif.created_at|date:"F d, Y \a\t g:i A" }}
+                                    </p>
+                                    {% if notif.link_url %}
+                                        <span class="text-blue-400 text-sm hover:text-blue-300">
+                                            <i class="fas fa-arrow-right mr-1"></i>View
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="p-12 text-center">
+                    <i class="fas fa-bell-slash text-6xl text-gray-600 mb-4"></i>
+                    <p class="text-gray-400 text-lg">No notifications yet</p>
+                    <p class="text-gray-500 text-sm mt-2">You'll see your notifications here when you have them</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function handleNotificationClick(notifId, linkUrl) {
+    // Mark as read
+    fetch(`/notifications/${notifId}/read/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Navigate if link exists
+        if (linkUrl) {
+            window.location.href = linkUrl;
+        } else {
+            // Just refresh page to update read status
+            window.location.reload();
+        }
+    });
+}
+
+function markAllAsRead() {
+    fetch('{% url "core:mark_all_notifications_read" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        }
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,352 @@
+{% extends 'base.html' %}
+
+{% block title %}FriendofMind - Your Mental Wellness Journey Starts Here{% endblock %}
+
+{% block content %}
+<section class="bg-gradient-to-br from-primary via-secondary to-primary min-h-screen flex items-center">
+    <div class="max-w-8xl mx-auto px-16 sm:px-20 lg:px-24">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+            <div>
+                <h1 class="text-5xl lg:text-7xl font-bold mb-8 text-[#304758] leading-tight">
+                    Your Mental Wellness Journey Starts Here
+                </h1>
+                <p class="text-2xl mb-12 text-[#304758] leading-relaxed">
+                    Organization-grade mental health assessments, personalized insights, and evidence-based resources to support your mental wellness journey.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-6">
+                    <button onclick="openSignupModal()" class="bg-[#304758] hover:bg-[#2a3e4d] text-white px-12 py-6 rounded-xl text-xl font-semibold transition duration-300 cursor-pointer">
+                        Start Your Assessment
+                    </button>
+                    <a href="#features" class="border-2 border-[#304758] text-[#304758] hover:bg-gray-100 px-12 py-6 rounded-xl text-xl font-semibold transition duration-300">
+                        Learn More
+                    </a>
+                </div>
+            </div>
+            <div class="hidden lg:block">
+                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-3xl p-12 h-[500px] flex items-center justify-center">
+                    <div class="text-center text-white">
+                        <i class="fas fa-heart text-8xl mb-6"></i>
+                        <p class="text-2xl font-semibold mb-3">Mental Wellness</p>
+                        <p class="text-lg opacity-90">Your journey to better mental health starts here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="features" class="pt-32 pb-32 bg-gray-50">
+    <div class="max-w-8xl mx-auto px-16 sm:px-20 lg:px-24">
+        <div class="text-center mb-24">
+            <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+                Why Choose FriendofMind?
+            </h2>
+            <p class="text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+                We combine cutting-edge technology with compassionate care to provide the most comprehensive mental health support platform.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-32">
+            <div class="text-center p-8">
+                <div class="bg-primary text-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-shield-alt text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-4">Privacy First</h3>
+                <p class="text-gray-600">Your data is encrypted and secure. We never share your personal information without consent.</p>
+            </div>
+
+            <div class="text-center p-8">
+                <div class="bg-secondary text-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-graduation-cap text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-4">Evidence-Based</h3>
+                <p class="text-gray-600">All our assessments are scientifically validated and recommended by mental health organizations.</p>
+            </div>
+
+            <div class="text-center p-8">
+                <div class="bg-accent text-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-users text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-4">Community Support</h3>
+                <p class="text-gray-600">Connect with verified mental health organizations and access 24/7 crisis support resources.</p>
+            </div>
+
+            <div class="text-center p-8">
+                <div class="bg-green-500 text-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-mobile-alt text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-4">Always Accessible</h3>
+                <p class="text-gray-600">Access your mental health resources anytime, anywhere with our responsive platform.</p>
+            </div>
+        </div>
+
+        <div class="text-center mb-24">
+            <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+                Comprehensive Mental Health Support
+            </h2>
+            <p class="text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+                Our platform offers scientifically validated assessments and personalized resources to help you understand and improve your mental well-being.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div class="text-center p-10 rounded-xl bg-gray-50 hover:shadow-lg transition duration-300">
+                <div class="bg-primary text-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-8">
+                    <i class="fas fa-clipboard-check text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-semibold mb-6">Validated Assessments</h3>
+                <p class="text-gray-600 text-lg leading-relaxed">Take scientifically validated mental health screenings including PHQ-9, GAD-7, and PSS to understand your current state.</p>
+            </div>
+
+            <div class="text-center p-10 rounded-xl bg-gray-50 hover:shadow-lg transition duration-300">
+                <div class="bg-secondary text-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-8">
+                    <i class="fas fa-chart-line text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-semibold mb-6">Track Your Progress</h3>
+                <p class="text-gray-600 text-lg leading-relaxed">Monitor your mental health journey with mood tracking, progress charts, and personalized insights over time.</p>
+            </div>
+
+            <div class="text-center p-10 rounded-xl bg-gray-50 hover:shadow-lg transition duration-300">
+                <div class="bg-accent text-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-8">
+                    <i class="fas fa-users text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-semibold mb-6">Find Organization Support</h3>
+                <p class="text-gray-600 text-lg leading-relaxed">Access a comprehensive directory of verified mental health organizations and crisis support resources.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pt-20 pb-20 bg-white">
+    <div class="max-w-8xl mx-auto px-16 sm:px-20 lg:px-24">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+                What Our Users Say
+            </h2>
+            <p class="text-xl text-gray-600">
+                Real stories from people who have found support through FriendofMind
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-gray-50 p-6 rounded-xl">
+                <div class="flex items-center mb-4">
+                    <div class="flex text-yellow-400">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+                <p class="text-gray-600 mb-4">"FriendofMind helped me understand my anxiety better. The assessments were easy to complete and the results were very helpful."</p>
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-semibold mr-3">
+                        M
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-900">Maria S.</p>
+                        <p class="text-sm text-gray-500">Student, Manila</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 p-6 rounded-xl">
+                <div class="flex items-center mb-4">
+                    <div class="flex text-yellow-400">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+                <p class="text-gray-600 mb-4">"The organization directory helped me find support that was perfect for my needs. The platform is so user-friendly."</p>
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-secondary rounded-full flex items-center justify-center text-white font-semibold mr-3">
+                        J
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-900">John R.</p>
+                        <p class="text-sm text-gray-500">Professional, Cebu</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 p-6 rounded-xl">
+                <div class="flex items-center mb-4">
+                    <div class="flex text-yellow-400">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                </div>
+                <p class="text-gray-600 mb-4">"I love the mood tracking feature. It helps me see patterns and understand my mental health journey better."</p>
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-accent rounded-full flex items-center justify-center text-white font-semibold mr-3">
+                        A
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-900">Ana L.</p>
+                        <p class="text-sm text-gray-500">Teacher, Davao</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="how-it-works" class="pt-20 pb-20 bg-gray-50">
+    <div class="max-w-8xl mx-auto px-16 sm:px-20 lg:px-24">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+                How It Works
+            </h2>
+            <p class="text-xl text-gray-600">
+                Simple steps to start your mental wellness journey
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="text-center">
+                <div class="bg-primary text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">1</div>
+                <h3 class="font-semibold mb-2">Sign Up</h3>
+                <p class="text-gray-600 text-sm">Create your secure, confidential account</p>
+            </div>
+            <div class="text-center">
+                <div class="bg-secondary text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">2</div>
+                <h3 class="font-semibold mb-2">Take Assessment</h3>
+                <p class="text-gray-600 text-sm">Complete validated mental health screenings</p>
+            </div>
+            <div class="text-center">
+                <div class="bg-accent text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">3</div>
+                <h3 class="font-semibold mb-2">Get Results</h3>
+                <p class="text-gray-600 text-sm">Receive personalized insights and recommendations</p>
+            </div>
+            <div class="text-center">
+                <div class="bg-green-500 text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">4</div>
+                <h3 class="font-semibold mb-2">Access Resources</h3>
+                <p class="text-gray-600 text-sm">Connect with organizations and self-help tools</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pt-20 pb-20 bg-gray-50">
+    <div class="max-w-6xl mx-auto px-16 sm:px-20 lg:px-24">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+                Frequently Asked Questions
+            </h2>
+            <p class="text-xl text-gray-600">
+                Common questions about our mental health support platform
+            </p>
+        </div>
+
+        <div class="space-y-6">
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Is my information secure and private?</h3>
+                <p class="text-gray-600">Yes, absolutely. We use industry-standard encryption to protect your data, and we never share your personal information without your explicit consent. Your privacy is our top priority.</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Are the assessments scientifically validated?</h3>
+                <p class="text-gray-600">Yes, all our assessments (PHQ-9, GAD-7, and PSS) are scientifically validated tools used by mental health organizations worldwide. They provide reliable insights into your mental health status.</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Can I replace therapy with this platform?</h3>
+                <p class="text-gray-600">No, FriendofMind is designed to complement, not replace, professional therapy. We provide screening tools and resources, but for ongoing treatment, we recommend working with qualified mental health organizations.</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">How much does it cost to use FriendofMind?</h3>
+                <p class="text-gray-600">Basic assessments and resources are completely free. We believe mental health support should be accessible to everyone. Some premium features may be available in the future.</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">What should I do if I'm in crisis?</h3>
+                <p class="text-gray-600">If you're having thoughts of self-harm or are in immediate danger, please call 911 or go to your nearest emergency room. You can also call the National Suicide Prevention Lifeline at 988 for 24/7 support.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="about" class="pt-20 pb-20 bg-white">
+    <div class="max-w-8xl mx-auto px-16 sm:px-20 lg:px-24">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+                About FriendofMind
+            </h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                We are dedicated to providing accessible, evidence-based mental health support for Filipino individuals. Our platform combines validated assessments with personalized resources to help you on your mental wellness journey.
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div>
+                <h3 class="text-2xl font-semibold text-gray-900 mb-4">Our Mission</h3>
+                <p class="text-gray-600 mb-6">
+                    To make mental health support accessible, culturally sensitive, and evidence-based for Filipino individuals, providing early intervention tools and connecting users with appropriate organizational resources.
+                </p>
+                <h3 class="text-2xl font-semibold text-gray-900 mb-4">Our Values</h3>
+                <ul class="text-gray-600 space-y-2">
+                    <li>• Privacy and confidentiality</li>
+                    <li>• Evidence-based practices</li>
+                    <li>• Cultural sensitivity</li>
+                    <li>• Accessibility and inclusivity</li>
+                    <li>• Organizational collaboration</li>
+                </ul>
+            </div>
+            <div class="bg-gray-100 rounded-2xl p-8">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Why Choose FriendofMind?</h3>
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <div class="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
+                            <i class="fas fa-check text-sm"></i>
+                        </div>
+                        <p class="text-gray-600">Validated mental health assessments (PHQ-9, GAD-7, PSS)</p>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
+                            <i class="fas fa-check text-sm"></i>
+                        </div>
+                        <p class="text-gray-600">Culturally sensitive approach for Filipino users</p>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
+                            <i class="fas fa-check text-sm"></i>
+                        </div>
+                        <p class="text-gray-600">Organization directory with verified mental health providers</p>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0">
+                            <i class="fas fa-check text-sm"></i>
+                        </div>
+                        <p class="text-gray-600">24/7 crisis support resources and hotlines</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pt-20 pb-20 bg-gradient-to-r from-primary to-secondary text-white">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-3xl lg:text-4xl font-bold mb-6">
+            Ready to Start Your Mental Wellness Journey?
+        </h2>
+        <p class="text-xl mb-8 text-gray-100">
+            Join thousands of individuals who have taken the first step towards better mental health.
+        </p>
+        <button onclick="openSignupModal()" class="bg-accent hover:bg-yellow-500 text-white px-8 py-4 rounded-lg text-lg font-semibold transition duration-300 inline-block cursor-pointer">
+            Get Started Today - It's Free
+        </button>
+        <p class="mt-4 text-sm text-gray-200">
+            Your privacy is protected. All assessments are confidential and secure.
+        </p>
+    </div>
+</section>
+{% endblock %}

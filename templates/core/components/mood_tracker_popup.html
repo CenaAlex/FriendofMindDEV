@@ -1,0 +1,294 @@
+<!-- Mood Tracker Popup -->
+<div id="moodTrackerModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex justify-center items-start overflow-y-auto p-4">
+    <div class="bg-gradient-to-br from-blue-900 to-purple-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden mt-10 mb-10">
+        <!-- Header -->
+        <div class="bg-white bg-opacity-10 backdrop-blur-sm p-6 border-b border-white border-opacity-20">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">How are you feeling today?</h2>
+                    <p class="text-sm text-gray-300 mt-1">Take a moment to check in with yourself</p>
+                </div>
+                <button onclick="closeMoodTracker()" class="text-white hover:text-gray-300">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Initial Mood Selection -->
+        <div id="moodSelectionStep" class="p-6">
+            <div class="mb-6">
+                <label class="block text-white font-semibold mb-4 text-center">Select your mood:</label>
+                <div class="flex justify-between items-end space-x-2">
+                    <button onclick="selectMood(1)" class="mood-option flex-1 flex flex-col items-center p-3 rounded-lg hover:bg-white hover:bg-opacity-20 transition transform hover:scale-110" data-mood="1">
+                        <span class="text-4xl mb-2">😢</span>
+                        <span class="text-white text-xs">Very Sad</span>
+                    </button>
+                    <button onclick="selectMood(2)" class="mood-option flex-1 flex flex-col items-center p-3 rounded-lg hover:bg-white hover:bg-opacity-20 transition transform hover:scale-110" data-mood="2">
+                        <span class="text-5xl mb-2">😔</span>
+                        <span class="text-white text-xs">Sad</span>
+                    </button>
+                    <button onclick="selectMood(3)" class="mood-option flex-1 flex flex-col items-center p-3 rounded-lg hover:bg-white hover:bg-opacity-20 transition transform hover:scale-110" data-mood="3">
+                        <span class="text-5xl mb-2">😐</span>
+                        <span class="text-white text-xs">Neutral</span>
+                    </button>
+                    <button onclick="selectMood(4)" class="mood-option flex-1 flex flex-col items-center p-3 rounded-lg hover:bg-white hover:bg-opacity-20 transition transform hover:scale-110" data-mood="4">
+                        <span class="text-5xl mb-2">😊</span>
+                        <span class="text-white text-xs">Happy</span>
+                    </button>
+                    <button onclick="selectMood(5)" class="mood-option flex-1 flex flex-col items-center p-3 rounded-lg hover:bg-white hover:bg-opacity-20 transition transform hover:scale-110" data-mood="5">
+                        <span class="text-6xl mb-2">😄</span>
+                        <span class="text-white text-xs">Very Happy</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Optional Notes -->
+            <div class="mb-6">
+                <label class="block text-white font-semibold mb-2">Add a note (optional):</label>
+                <textarea id="moodNotes" rows="3" class="w-full px-4 py-2 bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 resize-none" placeholder="What's on your mind?"></textarea>
+            </div>
+
+            <button id="submitMoodBtn" disabled class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition" onclick="submitMood()">
+                <i class="fas fa-check mr-2"></i>Log My Mood
+            </button>
+        </div>
+
+        <!-- Response Step -->
+        <div id="moodResponseStep" class="hidden p-6">
+            <!-- Loading -->
+            <div id="moodLoading" class="text-center py-8">
+                <i class="fas fa-spinner fa-spin text-5xl text-white mb-4"></i>
+                <p class="text-white">Logging your mood...</p>
+            </div>
+
+            <!-- Response Content -->
+            <div id="moodResponse" class="hidden">
+                <div class="text-center mb-6">
+                    <div id="responseIcon" class="text-6xl mb-4"></div>
+                    <p id="responseMessage" class="text-white text-lg font-semibold mb-2"></p>
+                </div>
+
+                <!-- Suggestions -->
+                <div id="suggestionBox" class="bg-white bg-opacity-10 rounded-lg p-4 mb-6">
+                    <p id="suggestionText" class="text-white font-semibold mb-3"></p>
+                    <div id="suggestionActions" class="space-y-2"></div>
+                </div>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-3 gap-3 mb-6">
+                    <div class="bg-white bg-opacity-10 rounded-lg p-3 text-center">
+                        <p class="text-2xl font-bold text-white" id="totalEntries">0</p>
+                        <p class="text-xs text-gray-300">Total Logs</p>
+                    </div>
+                    <div class="bg-white bg-opacity-10 rounded-lg p-3 text-center">
+                        <p class="text-2xl font-bold text-white" id="avgMood">0</p>
+                        <p class="text-xs text-gray-300">Avg Mood</p>
+                    </div>
+                    <div class="bg-white bg-opacity-10 rounded-lg p-3 text-center">
+                        <p class="text-2xl font-bold text-white" id="currentStreak">0</p>
+                        <p class="text-xs text-gray-300">Day Streak</p>
+                    </div>
+                </div>
+
+                <button onclick="closeMoodTracker()" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition">
+                    <i class="fas fa-check mr-2"></i>Continue to Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedMood = null;
+
+// Check if mood should be shown on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Only show for regular users (NOT admins/staff)
+    const isAdmin = {{ request.user.is_staff|lower }} || {{ request.user.is_superuser|lower }};
+    
+    if (isAdmin) {
+        // Admins don't need to log mood - they only view/analyze data
+        return;
+    }
+    
+    // Check if already shown in this session
+    if (sessionStorage.getItem('moodTrackerShown')) {
+        // Already shown in this login session, don't show again
+        return;
+    }
+    
+    // Only show for authenticated users and not on certain pages
+    const currentPath = window.location.pathname;
+    const excludePaths = ['/login/', '/register/', '/logout/', '/account-suspended/'];
+    
+    if (!excludePaths.includes(currentPath)) {
+        checkAndShowMoodTracker();
+    }
+});
+
+function checkAndShowMoodTracker() {
+    fetch('{% url "core:check_mood_logged" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (!data.mood_logged) {
+                // User hasn't logged mood today, show popup
+                setTimeout(() => {
+                    showMoodTracker();
+                    // Mark as shown in this session
+                    sessionStorage.setItem('moodTrackerShown', 'true');
+                }, 1000); // Show after 1 second
+            } else {
+                // Already logged today, mark as shown to prevent checking again
+                sessionStorage.setItem('moodTrackerShown', 'true');
+            }
+        })
+        .catch(error => {
+            console.error('Error checking mood:', error);
+            // On error, mark as shown to prevent infinite retries
+            sessionStorage.setItem('moodTrackerShown', 'true');
+        });
+}
+
+function showMoodTracker() {
+    document.getElementById('moodTrackerModal').classList.remove('hidden');
+    document.getElementById('moodTrackerModal').classList.add('flex');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeMoodTracker() {
+    document.getElementById('moodTrackerModal').classList.add('hidden');
+    document.getElementById('moodTrackerModal').classList.remove('flex');
+    document.body.style.overflow = 'auto';
+    
+    // Mark as completed for this session (won't show again until next login)
+    sessionStorage.setItem('moodTrackerShown', 'true');
+    
+    // Reset for next time
+    selectedMood = null;
+    document.getElementById('moodSelectionStep').classList.remove('hidden');
+    document.getElementById('moodResponseStep').classList.add('hidden');
+    document.getElementById('submitMoodBtn').disabled = true;
+    document.getElementById('moodNotes').value = '';
+    document.querySelectorAll('.mood-option').forEach(btn => {
+        btn.classList.remove('bg-white', 'bg-opacity-30', 'ring-2', 'ring-white');
+    });
+}
+
+function selectMood(mood) {
+    selectedMood = mood;
+    
+    // Update UI
+    document.querySelectorAll('.mood-option').forEach(btn => {
+        btn.classList.remove('bg-white', 'bg-opacity-30', 'ring-2', 'ring-white');
+    });
+    
+    event.currentTarget.classList.add('bg-white', 'bg-opacity-30', 'ring-2', 'ring-white');
+    document.getElementById('submitMoodBtn').disabled = false;
+}
+
+function submitMood() {
+    if (!selectedMood) return;
+    
+    const notes = document.getElementById('moodNotes').value;
+    const formData = new FormData();
+    formData.append('mood_level', selectedMood);
+    formData.append('notes', notes);
+    
+    // Show response step with loading
+    document.getElementById('moodSelectionStep').classList.add('hidden');
+    document.getElementById('moodResponseStep').classList.remove('hidden');
+    document.getElementById('moodLoading').classList.remove('hidden');
+    document.getElementById('moodResponse').classList.add('hidden');
+    
+    fetch('{% url "core:log_mood_popup" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Load stats
+            fetch('{% url "core:mood_stats" %}')
+                .then(response => response.json())
+                .then(stats => {
+                    displayResponse(data, stats);
+                });
+        } else {
+            alert('Error logging mood. Please try again.');
+            closeMoodTracker();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error logging mood. Please try again.');
+        closeMoodTracker();
+    });
+}
+
+function displayResponse(data, stats) {
+    // Hide loading, show response
+    document.getElementById('moodLoading').classList.add('hidden');
+    document.getElementById('moodResponse').classList.remove('hidden');
+    
+    // Set icon based on mood
+    const icons = {
+        1: '😢',
+        2: '😔',
+        3: '😐',
+        4: '😊',
+        5: '😄'
+    };
+    document.getElementById('responseIcon').textContent = icons[data.mood_level];
+    
+    // Set message
+    document.getElementById('responseMessage').textContent = data.message;
+    
+    // Set suggestion
+    document.getElementById('suggestionText').textContent = data.suggestion.text;
+    
+    // Set suggestion actions
+    const actionsHTML = data.suggestion.actions.map(action => 
+        `<a href="${action.link}" class="block bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition text-center">
+            <i class="fas fa-arrow-right mr-2"></i>${action.text}
+        </a>`
+    ).join('');
+    document.getElementById('suggestionActions').innerHTML = actionsHTML;
+    
+    // Set stats
+    document.getElementById('totalEntries').textContent = stats.total_entries;
+    document.getElementById('avgMood').textContent = stats.average_mood;
+    document.getElementById('currentStreak').textContent = stats.current_streak;
+    
+    // Mark as completed for this session
+    sessionStorage.setItem('moodTrackerShown', 'true');
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+<style>
+.mood-option {
+    cursor: pointer;
+}
+
+.mood-option:active {
+    transform: scale(0.95);
+}
+</style>
+

@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ assessment.title }} - Question {{ question_number }}/{{ total_questions }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 py-8">
+    <div class="max-w-4xl mx-auto px-4">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-white mb-2">{{ assessment.title }}</h1>
+                    <p class="text-gray-300">Question {{ question_number }} of {{ total_questions }}</p>
+                </div>
+                <a href="{% url 'screening:assessment_list' %}" 
+                   class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
+                   onclick="return confirm('Are you sure? Your progress will be saved.')">
+                    <i class="fas fa-times"></i> Exit
+                </a>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-700 rounded-full h-3 mb-2">
+                <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500" 
+                     style="width: {{ progress_percentage }}%"></div>
+            </div>
+            <div class="flex justify-between text-sm text-gray-400">
+                <span>{{ progress_percentage }}% Complete</span>
+                <span>{{ question_number }}/{{ total_questions }}</span>
+            </div>
+        </div>
+
+        <!-- Question Card -->
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-8 mb-6">
+            <form method="POST" action="" id="questionForm" onsubmit="console.log('Form submitting...'); return true;">
+                {% csrf_token %}
+                
+                <!-- Question -->
+                <div class="mb-8">
+                    <div class="flex items-start gap-4 mb-6">
+                        <div class="flex-shrink-0 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                            <span class="text-2xl font-bold text-white">{{ question_number }}</span>
+                        </div>
+                        <div class="flex-1">
+                            <h2 class="text-2xl font-semibold text-white mb-2">{{ question.text }}</h2>
+                            {% if question.description %}
+                            <p class="text-gray-300 text-sm">{{ question.description }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Answer Choices -->
+                    <div class="space-y-3">
+                        {% for choice in question.choices.all %}
+                        <label class="answer-choice-label flex items-center p-4 bg-white bg-opacity-5 hover:bg-opacity-10 rounded-lg cursor-pointer transition-all border-2 border-transparent hover:border-blue-500
+                            {% if existing_answer and existing_answer.answer_choice.id == choice.id %}bg-blue-900 bg-opacity-30 border-blue-500{% endif %}">
+                            <input type="radio" 
+                                   name="answer" 
+                                   value="{{ choice.id }}" 
+                                   class="w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                                   {% if existing_answer and existing_answer.answer_choice.id == choice.id %}checked{% endif %}
+                                   required>
+                            <span class="ml-4 text-lg text-white flex-1">{{ choice.text }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between items-center pt-6 border-t border-gray-700">
+                    <div>
+                        {% if not is_first_question %}
+                        <button type="submit" 
+                                name="action" 
+                                value="back"
+                                onclick="console.log('Back button clicked'); return true;"
+                                class="px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i>Previous
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex gap-3">
+                        {% if is_last_question %}
+                        <button type="submit" 
+                                name="action" 
+                                value="submit"
+                                onclick="return validateForm();"
+                                class="px-8 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg hover:from-green-700 hover:to-blue-700 transition-all shadow-lg">
+                            <i class="fas fa-check mr-2"></i>Submit Assessment
+                        </button>
+                        {% else %}
+                        <button type="submit" 
+                                name="action" 
+                                value="next"
+                                onclick="return validateForm();"
+                                class="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg">
+                            Next<i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Help Text -->
+        <div class="bg-blue-900 bg-opacity-30 border border-blue-500 rounded-lg p-4">
+            <div class="flex items-start gap-3">
+                <i class="fas fa-info-circle text-blue-400 text-xl mt-1"></i>
+                <div>
+                    <p class="text-blue-300 text-sm mb-2">
+                        <strong>Tips:</strong>
+                    </p>
+                    <ul class="text-blue-300 text-sm space-y-1">
+                        <li>• Answer based on how you've been feeling recently</li>
+                        <li>• Be honest - this assessment is private and confidential</li>
+                        <li>• You can go back to change your answers if needed</li>
+                        <li>• Your progress is automatically saved</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Crisis Support (if needed) -->
+        {% if assessment.name == 'phq9' %}
+        <div class="mt-6 bg-red-900 bg-opacity-30 border border-red-500 rounded-lg p-4">
+            <div class="flex items-start gap-3">
+                <i class="fas fa-phone text-red-400 text-xl mt-1"></i>
+                <div>
+                    <p class="text-red-300 font-semibold mb-1">Crisis Support Available 24/7</p>
+                    <p class="text-red-300 text-sm mb-2">
+                        If you're in crisis or having thoughts of hurting yourself, please reach out immediately:
+                    </p>
+                    <div class="text-red-300 text-sm space-y-1">
+                        <p><strong>National Suicide Prevention Lifeline:</strong> <a href="tel:988" class="underline font-bold">988</a></p>
+                        <p><strong>Crisis Text Line:</strong> Text HOME to <a href="sms:741741" class="underline font-bold">741741</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+console.log('Assessment page loaded');
+
+// Add visual feedback when selecting answers
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded fired');
+    
+    // Radio button selection feedback
+    document.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            console.log('Answer selected:', this.value);
+            // Remove selected styling from all labels
+            document.querySelectorAll('.answer-choice-label').forEach(label => {
+                label.classList.remove('bg-blue-900', 'bg-opacity-30', 'border-blue-500');
+                label.classList.add('border-transparent');
+            });
+            
+            // Add selected styling to chosen label
+            const label = this.closest('.answer-choice-label');
+            label.classList.add('bg-blue-900', 'bg-opacity-30', 'border-blue-500');
+            label.classList.remove('border-transparent');
+        });
+    });
+});
+
+// Simpler form validation without preventing default
+function validateForm() {
+    console.log('Validating form...');
+    const form = document.getElementById('questionForm');
+    const selectedAnswer = form.querySelector('input[name="answer"]:checked');
+    
+    if (!selectedAnswer) {
+        alert('Please select an answer before continuing.');
+        return false;
+    }
+    
+    console.log('Form valid, submitting...');
+    return true;
+}
+</script>
+{% endblock %}
+

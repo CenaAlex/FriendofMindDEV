@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block title %}Assessment Results - FriendofMind{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <div class="text-center mb-8">
+            <div class="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center
+                        {% if user_assessment.assessmentresult.severity_level == 'minimal' %}bg-green-100
+                        {% elif user_assessment.assessmentresult.severity_level == 'mild' %}bg-blue-100
+                        {% elif user_assessment.assessmentresult.severity_level == 'moderate' %}bg-yellow-100
+                        {% elif user_assessment.assessmentresult.severity_level == 'moderately_severe' %}bg-orange-100
+                        {% else %}bg-red-100
+                        {% endif %}">
+                <i class="fas fa-clipboard-check text-3xl
+                          {% if user_assessment.assessmentresult.severity_level == 'minimal' %}text-green-600
+                          {% elif user_assessment.assessmentresult.severity_level == 'mild' %}text-blue-600
+                          {% elif user_assessment.assessmentresult.severity_level == 'moderate' %}text-yellow-600
+                          {% elif user_assessment.assessmentresult.severity_level == 'moderately_severe' %}text-orange-600
+                          {% else %}text-red-600
+                          {% endif %}"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Assessment Complete</h1>
+            <p class="text-gray-600">{{ user_assessment.assessment.title }}</p>
+        </div>
+
+        <!-- Score and Severity -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-gray-50 rounded-lg p-6 text-center">
+                <h2 class="text-lg font-semibold text-gray-900 mb-2">Your Score</h2>
+                <div class="text-4xl font-bold 
+                            {% if user_assessment.assessmentresult.severity_level == 'minimal' %}text-green-600
+                            {% elif user_assessment.assessmentresult.severity_level == 'mild' %}text-blue-600
+                            {% elif user_assessment.assessmentresult.severity_level == 'moderate' %}text-yellow-600
+                            {% elif user_assessment.assessmentresult.severity_level == 'moderately_severe' %}text-orange-600
+                            {% else %}text-red-600
+                            {% endif %}">
+                    {{ user_assessment.total_score }}
+                </div>
+                {% if user_assessment.assessment.name == 'phq9' %}
+                    <p class="text-sm text-gray-600 mt-1">out of 27</p>
+                {% elif user_assessment.assessment.name == 'gad7' %}
+                    <p class="text-sm text-gray-600 mt-1">out of 21</p>
+                {% else %}
+                    <p class="text-sm text-gray-600 mt-1">out of 40</p>
+                {% endif %}
+            </div>
+            
+            <div class="bg-gray-50 rounded-lg p-6 text-center">
+                <h2 class="text-lg font-semibold text-gray-900 mb-2">Severity Level</h2>
+                <div class="text-2xl font-semibold 
+                            {% if user_assessment.assessmentresult.severity_level == 'minimal' %}text-green-600
+                            {% elif user_assessment.assessmentresult.severity_level == 'mild' %}text-blue-600
+                            {% elif user_assessment.assessmentresult.severity_level == 'moderate' %}text-yellow-600
+                            {% elif user_assessment.assessmentresult.severity_level == 'moderately_severe' %}text-orange-600
+                            {% else %}text-red-600
+                            {% endif %}">
+                    {{ user_assessment.assessmentresult.get_severity_level_display }}
+                </div>
+                <p class="text-sm text-gray-600 mt-1">Score Range: {{ user_assessment.assessmentresult.score_range }}</p>
+            </div>
+        </div>
+
+        <!-- Recommendation -->
+        <div class="mb-8 p-6 rounded-lg border-l-4
+                    {% if user_assessment.assessmentresult.severity_level == 'minimal' %}border-green-500 bg-green-50
+                    {% elif user_assessment.assessmentresult.severity_level == 'mild' %}border-blue-500 bg-blue-50
+                    {% elif user_assessment.assessmentresult.severity_level == 'moderate' %}border-yellow-500 bg-yellow-50
+                    {% elif user_assessment.assessmentresult.severity_level == 'moderately_severe' %}border-orange-500 bg-orange-50
+                    {% else %}border-red-500 bg-red-50
+                    {% endif %}">
+            <h3 class="text-lg font-semibold mb-3
+                       {% if user_assessment.assessmentresult.severity_level == 'minimal' %}text-green-800
+                       {% elif user_assessment.assessmentresult.severity_level == 'mild' %}text-blue-800
+                       {% elif user_assessment.assessmentresult.severity_level == 'moderate' %}text-yellow-800
+                       {% elif user_assessment.assessmentresult.severity_level == 'moderately_severe' %}text-orange-800
+                       {% else %}text-red-800
+                       {% endif %}">
+                <i class="fas fa-lightbulb mr-2"></i>Recommendation
+            </h3>
+            <p class="
+               {% if user_assessment.assessmentresult.severity_level == 'minimal' %}text-green-700
+               {% elif user_assessment.assessmentresult.severity_level == 'mild' %}text-blue-700
+               {% elif user_assessment.assessmentresult.severity_level == 'moderate' %}text-yellow-700
+               {% elif user_assessment.assessmentresult.severity_level == 'moderately_severe' %}text-orange-700
+               {% else %}text-red-700
+               {% endif %}">
+                {{ user_assessment.assessmentresult.recommendation }}
+            </p>
+        </div>
+
+        <!-- Assessment Details -->
+        <div class="bg-gray-50 rounded-lg p-6 mb-8">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Assessment Details</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <span class="font-medium text-gray-700">Assessment Type:</span>
+                    <span class="text-gray-600 ml-2">{{ user_assessment.assessment.get_name_display }}</span>
+                </div>
+                <div>
+                    <span class="font-medium text-gray-700">Completed:</span>
+                    <span class="text-gray-600 ml-2">{{ user_assessment.completed_at|date:"F j, Y g:i A" }}</span>
+                </div>
+                <div>
+                    <span class="font-medium text-gray-700">Questions:</span>
+                    <span class="text-gray-600 ml-2">{{ user_assessment.answers.count }} answered</span>
+                </div>
+                <div>
+                    <span class="font-medium text-gray-700">Duration:</span>
+                    <span class="text-gray-600 ml-2">
+                        {% if user_assessment.completed_at and user_assessment.started_at %}
+                            {{ user_assessment.completed_at|timeuntil:user_assessment.started_at }}
+                        {% else %}
+                            Unknown
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <a href="{% url 'mentalhealth:resource_list' %}" 
+               class="flex items-center p-6 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition duration-200">
+                <div class="bg-blue-100 p-3 rounded-full mr-4">
+                    <i class="fas fa-book-open text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-blue-900">Browse Resources</h4>
+                    <p class="text-sm text-blue-700">Find helpful articles and self-help materials</p>
+                </div>
+            </a>
+            
+            <a href="{% url 'mentalhealth:professional_list' %}" 
+               class="flex items-center p-6 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition duration-200">
+                <div class="bg-green-100 p-3 rounded-full mr-4">
+                    <i class="fas fa-user-md text-green-600 text-xl"></i>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-green-900">Find Organization Support</h4>
+                    <p class="text-sm text-green-700">Connect with verified mental health organizations</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{% url 'screening:assessment_list' %}" 
+               class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg text-center transition duration-200">
+                <i class="fas fa-clipboard-list mr-2"></i>Take Another Assessment
+            </a>
+            <a href="{% url 'core:dashboard' %}" 
+               class="bg-primary hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-center transition duration-200">
+                <i class="fas fa-tachometer-alt mr-2"></i>Return to Dashboard
+            </a>
+            <a href="{% url 'screening:assessment_history' %}" 
+               class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg text-center transition duration-200">
+                <i class="fas fa-history mr-2"></i>View History
+            </a>
+        </div>
+
+        <!-- Important Notice -->
+        {% if user_assessment.assessmentresult.severity_level in 'moderately_severe,severe' %}
+        <div class="mt-8 bg-red-50 border border-red-200 rounded-lg p-6">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-red-800 mb-2">Important Notice</h3>
+                    <p class="text-sm text-red-700 mb-4">
+                        Your assessment results indicate that you may benefit from organizational support. 
+                        We strongly encourage you to reach out to a mental health organization.
+                    </p>
+                    <div class="text-sm text-red-700">
+                        <p><strong>Crisis Support (24/7):</strong></p>
+                        <p>• National Suicide Prevention Lifeline: <a href="tel:988" class="underline font-semibold">988</a></p>
+                        <p>• Crisis Text Line: Text HOME to <a href="sms:741741" class="underline font-semibold">741741</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Disclaimer -->
+        <div class="mt-8 text-center text-sm text-gray-500">
+            <p>
+                This assessment is a screening tool and is not intended to diagnose any mental health condition. 
+                Please consult with a qualified mental health organization for proper evaluation and treatment.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Resource Management - Admin{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="min-h-screen -mt-16 pt-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div class="max-w-8xl mx-auto px-16 sm:px-20 lg:px-24 py-8">
+
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-bold text-white mb-2">Resource Management</h1>
+                    <p class="text-xl text-white opacity-90">Manage mental health resources and articles</p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{% url 'mentalhealth:admin_resource_create' %}" 
+                       class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-300">
+                        <i class="fas fa-plus mr-2"></i>Add New Resource
+                    </a>
+                    <a href="{% url 'core:admin_dashboard' %}" 
+                       class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition duration-300">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-3xl font-bold">{{ total_resources }}</h3>
+                        <p class="text-lg">Total Resources</p>
+                    </div>
+                    <div class="text-blue-400">
+                        <i class="fas fa-book text-3xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-3xl font-bold">{{ active_resources }}</h3>
+                        <p class="text-lg">Active Resources</p>
+                    </div>
+                    <div class="text-green-400">
+                        <i class="fas fa-check-circle text-3xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-3xl font-bold">{{ total_resources|add:"-"|add:active_resources }}</h3>
+                        <p class="text-lg">Inactive Resources</p>
+                    </div>
+                    <div class="text-red-400">
+                        <i class="fas fa-times-circle text-3xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 mb-8">
+            <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Search</label>
+                    <input 
+                        type="text" 
+                        name="search" 
+                        value="{{ search }}"
+                        placeholder="Search resources..." 
+                        class="w-full px-3 py-2 bg-white bg-opacity-20 border border-gray-300 rounded-lg text-white placeholder-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Category</label>
+                    <select name="category" class="w-full px-3 py-2 bg-white bg-opacity-20 border border-gray-300 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if current_category == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Type</label>
+                    <select name="type" class="w-full px-3 py-2 bg-white bg-opacity-20 border border-gray-300 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Types</option>
+                        <option value="article" {% if current_type == 'article' %}selected{% endif %}>Article</option>
+                        <option value="video" {% if current_type == 'video' %}selected{% endif %}>Video</option>
+                        <option value="hotline" {% if current_type == 'hotline' %}selected{% endif %}>Hotline</option>
+                        <option value="app" {% if current_type == 'app' %}selected{% endif %}>App</option>
+                        <option value="website" {% if current_type == 'website' %}selected{% endif %}>Website</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">Status</label>
+                    <select name="status" class="w-full px-3 py-2 bg-white bg-opacity-20 border border-gray-300 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Status</option>
+                        <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="md:col-span-4 flex gap-2">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition duration-300">
+                        <i class="fas fa-search mr-2"></i>Filter
+                    </button>
+                    <a href="{% url 'mentalhealth:admin_resource_list' %}" 
+                       class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded-lg transition duration-300">
+                        <i class="fas fa-redo mr-2"></i>Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Resources Table -->
+        <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden">
+            <div class="overflow-x-auto">
+                {% if resources %}
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-white bg-opacity-5">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Title</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Created</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for resource in resources %}
+                        <tr class="hover:bg-white hover:bg-opacity-5 transition duration-200">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div>
+                                    <div class="text-sm font-medium text-white">{{ resource.title|truncatewords:8 }}</div>
+                                    <div class="text-sm text-gray-300">{{ resource.description|truncatewords:10 }}</div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    {{ resource.get_resource_type_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    {{ resource.category.name }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if resource.is_active %}bg-green-100 text-green-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {% if resource.is_active %}
+                                        <i class="fas fa-check-circle mr-1"></i>Active
+                                    {% else %}
+                                        <i class="fas fa-times-circle mr-1"></i>Inactive
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                {{ resource.created_at|date:"M d, Y" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-2">
+                                    <a href="{% url 'mentalhealth:resource_detail' resource.id %}" 
+                                       class="text-blue-400 hover:text-blue-300" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'mentalhealth:admin_resource_edit' resource.id %}" 
+                                       class="text-green-400 hover:text-green-300" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{% url 'mentalhealth:admin_resource_toggle' resource.id %}" 
+                                          method="post" 
+                                          class="inline"
+                                          onsubmit="return confirm('Toggle resource status?')">
+                                        {% csrf_token %}
+                                        <button type="submit" 
+                                                class="{% if resource.is_active %}text-orange-400 hover:text-orange-300{% else %}text-green-400 hover:text-green-300{% endif %}" 
+                                                title="{% if resource.is_active %}Deactivate{% else %}Activate{% endif %}">
+                                            <i class="fas fa-power-off"></i>
+                                        </button>
+                                    </form>
+                                    <a href="{% url 'mentalhealth:admin_resource_delete' resource.id %}" 
+                                       class="text-red-400 hover:text-red-300" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-center py-12">
+                    <i class="fas fa-box-open text-gray-300 text-5xl mb-4"></i>
+                    <p class="text-gray-300">No resources found</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="mt-8 flex justify-center">
+            <nav class="flex space-x-2">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1{% if search %}&search={{ search }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" 
+                       class="px-3 py-2 bg-white bg-opacity-10 text-white rounded-lg hover:bg-opacity-20 transition duration-300">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" 
+                       class="px-3 py-2 bg-white bg-opacity-10 text-white rounded-lg hover:bg-opacity-20 transition duration-300">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                {% endif %}
+
+                <span class="px-3 py-2 bg-blue-600 text-white rounded-lg">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" 
+                       class="px-3 py-2 bg-white bg-opacity-10 text-white rounded-lg hover:bg-opacity-20 transition duration-300">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" 
+                       class="px-3 py-2 bg-white bg-opacity-10 text-white rounded-lg hover:bg-opacity-20 transition duration-300">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}Account Suspended{% endblock %}
+
+{% block content %}
+<div class="min-h-screen -mt-16 pt-16 bg-gradient-to-br from-red-900 via-red-800 to-slate-900 flex items-center justify-center">
+    <div class="max-w-2xl mx-auto px-6 py-12">
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl shadow-2xl p-12 text-center">
+            <!-- Icon -->
+            <div class="mb-8">
+                <div class="w-24 h-24 mx-auto bg-red-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-ban text-5xl text-red-400"></i>
+                </div>
+            </div>
+
+            <!-- Title -->
+            <h1 class="text-4xl font-bold text-white mb-4">
+                Account Suspended
+            </h1>
+
+            <!-- Message -->
+            <div class="mb-8">
+                <p class="text-xl text-gray-200 mb-4">
+                    Your account has been temporarily suspended.
+                </p>
+                <p class="text-lg text-gray-300 mb-6">
+                    This may be due to a violation of our terms of service, security concerns, or administrative action.
+                </p>
+            </div>
+
+            <!-- Information Box -->
+            <div class="bg-white bg-opacity-5 rounded-lg p-6 mb-8 text-left">
+                <h2 class="text-xl font-semibold text-white mb-4 flex items-center">
+                    <i class="fas fa-info-circle text-blue-400 mr-3"></i>
+                    What You Can Do:
+                </h2>
+                <ul class="space-y-3 text-gray-200">
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-400 mt-1 mr-3"></i>
+                        <span>Contact our support team to resolve this issue</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-400 mt-1 mr-3"></i>
+                        <span>Provide your account details for verification</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-400 mt-1 mr-3"></i>
+                        <span>Wait for an email response from our team</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Contact Support Section -->
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-8 mb-8">
+                <h2 class="text-2xl font-bold text-white mb-4">
+                    <i class="fas fa-headset mr-2"></i>
+                    Contact Support Team
+                </h2>
+                <p class="text-blue-100 mb-6">
+                    Our support team is here to help you resolve this issue.
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                    <!-- Email -->
+                    <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-envelope text-blue-200 mr-3"></i>
+                            <span class="text-sm text-blue-200 font-medium">Email Support</span>
+                        </div>
+                        <a href="mailto:support@friendofmind.com" class="text-white font-semibold hover:text-blue-200 transition">
+                            support@friendofmind.com
+                        </a>
+                    </div>
+
+                    <!-- Phone -->
+                    <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-phone text-blue-200 mr-3"></i>
+                            <span class="text-sm text-blue-200 font-medium">Phone Support</span>
+                        </div>
+                        <a href="tel:+63-XXX-XXX-XXXX" class="text-white font-semibold hover:text-blue-200 transition">
+                            +63-XXX-XXX-XXXX
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Contact Form Button -->
+                <div class="mt-6">
+                    <a href="mailto:support@friendofmind.com?subject=Account%20Suspended%20-%20Help%20Needed" 
+                       class="inline-block bg-white text-blue-600 font-semibold px-8 py-3 rounded-lg hover:bg-blue-50 transition duration-300">
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        Send Support Email
+                    </a>
+                </div>
+            </div>
+
+            <!-- Account Information -->
+            {% if user.is_authenticated %}
+            <div class="bg-white bg-opacity-5 rounded-lg p-4 mb-6 text-sm text-gray-300">
+                <p><strong>Account:</strong> {{ user.username }}</p>
+                <p><strong>Email:</strong> {{ user.email }}</p>
+                <p class="mt-2 text-xs text-gray-400">Please reference this information when contacting support.</p>
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="{% url 'core:logout' %}" class="bg-gray-600 hover:bg-gray-700 text-white px-8 py-3 rounded-lg transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    Sign Out
+                </a>
+                <a href="{% url 'core:landing' %}" class="bg-slate-700 hover:bg-slate-600 text-white px-8 py-3 rounded-lg transition duration-300 flex items-center justify-center">
+                    <i class="fas fa-home mr-2"></i>
+                    Back to Home
+                </a>
+            </div>
+
+            <!-- Additional Note -->
+            <div class="mt-8 pt-6 border-t border-gray-600">
+                <p class="text-sm text-gray-400">
+                    <i class="fas fa-shield-alt mr-2"></i>
+                    If you believe this is an error, please contact us immediately.
+                    We typically respond within 24-48 hours.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Pulse animation for the icon */
+    @keyframes pulse-ring {
+        0% {
+            transform: scale(0.95);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.05);
+            opacity: 0.7;
+        }
+        100% {
+            transform: scale(0.95);
+            opacity: 1;
+        }
+    }
+    
+    .fa-ban {
+        animation: pulse-ring 2s ease-in-out infinite;
+    }
+</style>
+{% endblock %}
+

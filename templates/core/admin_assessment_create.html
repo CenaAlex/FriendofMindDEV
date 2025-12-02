@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Assessment - Admin{% endblock %}
+
+{% block content %}
+<div class="min-h-screen -mt-16 pt-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div class="max-w-4xl mx-auto px-6 sm:px-8 lg:px-12 py-8">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-bold text-white mb-2">Create New Assessment</h1>
+                    <p class="text-xl text-white opacity-90">Add a new mental health assessment</p>
+                </div>
+                <a href="{% url 'core:admin_assessment_management' %}" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition duration-300">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Assessments
+                </a>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-8">
+            <form method="POST">
+                {% csrf_token %}
+                
+                {% if messages %}
+                <div class="mb-6">
+                    {% for message in messages %}
+                    <div class="bg-{% if message.tags == 'error' %}red{% else %}green{% endif %}-500 bg-opacity-20 border border-{% if message.tags == 'error' %}red{% else %}green{% endif %}-500 text-white px-4 py-3 rounded mb-2">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="space-y-6">
+                    <!-- Assessment Type -->
+                    <div>
+                        <label for="{{ form.name.id_for_label }}" class="block text-white font-medium mb-2">
+                            Assessment Type <span class="text-red-400">*</span>
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.name.errors.0 }}</p>
+                        {% endif %}
+                        <p class="text-gray-400 text-xs mt-1">Select the type of mental health assessment</p>
+                    </div>
+
+                    <!-- Title -->
+                    <div>
+                        <label for="{{ form.title.id_for_label }}" class="block text-white font-medium mb-2">
+                            Assessment Title <span class="text-red-400">*</span>
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.title.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label for="{{ form.description.id_for_label }}" class="block text-white font-medium mb-2">
+                            Description <span class="text-red-400">*</span>
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.description.errors.0 }}</p>
+                        {% endif %}
+                        <p class="text-gray-400 text-xs mt-1">Brief description of what this assessment measures</p>
+                    </div>
+
+                    <!-- Instructions -->
+                    <div>
+                        <label for="{{ form.instructions.id_for_label }}" class="block text-white font-medium mb-2">
+                            Instructions <span class="text-red-400">*</span>
+                        </label>
+                        {{ form.instructions }}
+                        {% if form.instructions.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.instructions.errors.0 }}</p>
+                        {% endif %}
+                        <p class="text-gray-400 text-xs mt-1">Instructions for users taking this assessment</p>
+                    </div>
+
+                    <!-- Is Active -->
+                    <div class="flex items-center">
+                        {{ form.is_active }}
+                        <label for="{{ form.is_active.id_for_label }}" class="ml-2 text-white">
+                            Make this assessment active (available to users)
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Info Box -->
+                <div class="mt-8 bg-blue-500 bg-opacity-10 border border-blue-500 rounded-lg p-4">
+                    <div class="flex">
+                        <i class="fas fa-info-circle text-blue-400 text-xl mr-3 mt-1"></i>
+                        <div>
+                            <p class="text-blue-200 font-semibold mb-2">Next Steps</p>
+                            <p class="text-blue-100 text-sm">
+                                After creating the assessment, you'll need to use Django Admin to add questions and answer choices. 
+                                Go to <strong>/admin/screening/assessment/</strong> to manage questions.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="mt-8 flex justify-end space-x-4">
+                    <a href="{% url 'core:admin_assessment_management' %}" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition duration-300">
+                        Cancel
+                    </a>
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition duration-300">
+                        <i class="fas fa-plus mr-2"></i>Create Assessment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0.5rem;
+        color: white;
+        transition: all 0.3s;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: rgba(59, 130, 246, 0.5);
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+    textarea.form-control {
+        resize: vertical;
+    }
+    input[type="checkbox"] {
+        width: 1.25rem;
+        height: 1.25rem;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+

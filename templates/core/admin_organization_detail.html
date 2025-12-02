@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+
+{% block title %}Organization Details - Admin{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="min-h-screen -mt-16 pt-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div class="max-w-8xl mx-auto px-16 sm:px-20 lg:px-24 py-8">
+
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-bold text-white mb-2">Organization Details</h1>
+                    <p class="text-xl text-white opacity-90">{{ organization.organization_name }}</p>
+                </div>
+                <a href="{% url 'core:admin_organization_management' %}" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition duration-300">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Organizations
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Organization Information -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Basic Information -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-8">
+                    <h2 class="text-2xl font-bold text-white mb-6">Organization Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Organization Name</label>
+                            <p class="text-white">{{ organization.organization_name }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Type</label>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                {{ organization.get_organization_type_display }}
+                            </span>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Contact Email</label>
+                            <p class="text-white">{{ organization.email }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Phone</label>
+                            <p class="text-white">{{ organization.phone }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Address</label>
+                            <p class="text-white">{{ organization.full_address }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Status</label>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if organization.is_verified %}bg-green-100 text-green-800
+                                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                {% if organization.is_verified %}Verified{% else %}Pending Verification{% endif %}
+                            </span>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Created</label>
+                            <p class="text-white">{{ organization.created_at|date:"M d, Y" }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 text-sm font-medium mb-2">Emergency Services</label>
+                            <span class="{% if organization.emergency_services %}text-green-400{% else %}text-gray-400{% endif %}">
+                                {% if organization.emergency_services %}Available{% else %}Not Available{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description and Services -->
+                {% if organization.description or organization.services_offered %}
+                <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-8">
+                    <h2 class="text-2xl font-bold text-white mb-6">Description & Services</h2>
+                    {% if organization.description %}
+                    <div class="mb-6">
+                        <label class="block text-gray-300 text-sm font-medium mb-2">Description</label>
+                        <p class="text-white">{{ organization.description }}</p>
+                    </div>
+                    {% endif %}
+                    {% if organization.services_offered %}
+                    <div>
+                        <label class="block text-gray-300 text-sm font-medium mb-2">Services Offered</label>
+                        <p class="text-white">{{ organization.services_offered }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Staff Members -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-8">
+                    <h2 class="text-2xl font-bold text-white mb-6">Staff Members</h2>
+                    {% if staff %}
+                        <div class="space-y-4">
+                            {% for member in staff %}
+                            <div class="bg-white bg-opacity-5 rounded-lg p-4">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-white">{{ member.user.get_full_name|default:member.user.username }}</h3>
+                                        <p class="text-sm text-gray-300">{{ member.user.email }}</p>
+                                        <p class="text-sm text-gray-300">Role: {{ member.get_role_display }}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm text-gray-300">Joined: {{ member.joined_at|date:"M d, Y" }}</p>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                            {% if member.is_active %}bg-green-100 text-green-800
+                                            {% else %}bg-red-100 text-red-800{% endif %}">
+                                            {% if member.is_active %}Active{% else %}Inactive{% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-gray-300 py-8">
+                            <i class="fas fa-users text-4xl mb-4"></i>
+                            <p>No staff members found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-8">
+                <!-- Organization Actions -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-white mb-4">Organization Actions</h2>
+                    <div class="space-y-3">
+                        <a href="{% url 'core:admin_organization_edit' organization.id %}" 
+                           class="block bg-blue-600 hover:bg-blue-700 rounded-lg p-4 text-white transition duration-300">
+                            <div class="flex items-center">
+                                <i class="fas fa-edit text-xl mr-3"></i>
+                                <span>Edit Organization Profile</span>
+                            </div>
+                        </a>
+                        <form method="POST" action="{% url 'core:admin_toggle_organization_verification' organization.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" 
+                               class="w-full {% if organization.is_verified %}bg-yellow-600 hover:bg-yellow-700{% else %}bg-green-600 hover:bg-green-700{% endif %} rounded-lg p-4 text-white transition duration-300"
+                               onclick="return confirm('Are you sure you want to {% if organization.is_verified %}unverify{% else %}verify{% endif %} this organization?')">
+                                <div class="flex items-center">
+                                    <i class="fas fa-{% if organization.is_verified %}times{% else %}check{% endif %} text-xl mr-3"></i>
+                                    <span>{% if organization.is_verified %}Unverify Organization{% else %}Verify Organization{% endif %}</span>
+                                </div>
+                            </button>
+                        </form>
+                        <a href="mailto:{{ organization.email }}" class="block bg-indigo-600 hover:bg-indigo-700 rounded-lg p-4 text-white transition duration-300">
+                            <div class="flex items-center">
+                                <i class="fas fa-envelope text-xl mr-3"></i>
+                                <span>Send Email</span>
+                            </div>
+                        </a>
+                        {% if organization.website %}
+                        <a href="{{ organization.website }}" target="_blank" class="block bg-purple-600 hover:bg-purple-700 rounded-lg p-4 text-white transition duration-300">
+                            <div class="flex items-center">
+                                <i class="fas fa-external-link-alt text-xl mr-3"></i>
+                                <span>Visit Website</span>
+                            </div>
+                        </a>
+                        {% endif %}
+                        <form method="POST" action="{% url 'core:admin_delete_organization' organization.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" 
+                               class="w-full bg-rose-600 hover:bg-rose-700 rounded-lg p-4 text-white transition duration-300"
+                               onclick="return confirm('Are you sure you want to DELETE this organization? This will also delete the associated user account. This action cannot be undone!')">
+                                <div class="flex items-center">
+                                    <i class="fas fa-trash text-xl mr-3"></i>
+                                    <span>Delete Organization</span>
+                                </div>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Organization Stats -->
+                <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-white mb-4">Organization Stats</h2>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-300">Staff Members</span>
+                            <span class="text-blue-400 font-medium">{{ staff.count }}</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-300">Verification Status</span>
+                            <span class="{% if organization.is_verified %}text-green-400{% else %}text-yellow-400{% endif %} font-medium">
+                                {% if organization.is_verified %}Verified{% else %}Pending{% endif %}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-300">Emergency Services</span>
+                            <span class="{% if organization.emergency_services %}text-green-400{% else %}text-gray-400{% endif %} font-medium">
+                                {% if organization.emergency_services %}Available{% else %}Not Available{% endif %}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-300">Created</span>
+                            <span class="text-gray-300 font-medium">{{ organization.created_at|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Info -->
+                {% if organization.operating_hours or organization.languages_spoken %}
+                <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-white mb-4">Additional Information</h2>
+                    <div class="space-y-3 text-sm">
+                        {% if organization.operating_hours %}
+                        <div>
+                            <span class="text-gray-300">Operating Hours:</span>
+                            <p class="text-white">{{ organization.operating_hours }}</p>
+                        </div>
+                        {% endif %}
+                        {% if organization.languages_spoken %}
+                        <div>
+                            <span class="text-gray-300">Languages:</span>
+                            <p class="text-white">{{ organization.languages_spoken }}</p>
+                        </div>
+                        {% endif %}
+                        {% if organization.insurance_accepted %}
+                        <div>
+                            <span class="text-gray-300">Insurance:</span>
+                            <p class="text-white">{{ organization.insurance_accepted }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
