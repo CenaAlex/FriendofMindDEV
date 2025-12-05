@@ -19,17 +19,32 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label for="id_first_name" class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                    {{ form.first_name }}
+                    <input type="text" name="first_name" id="id_first_name" value="{{ form.first_name.value|default:'' }}" 
+                           pattern="[A-Za-z\s'-]+" 
+                           title="First name can only contain letters, spaces, hyphens, and apostrophes"
+                           class="form-input">
+                    {% if form.first_name.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.first_name.errors.0 }}</p>
+                    {% endif %}
                 </div>
                 <div>
                     <label for="id_last_name" class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                    {{ form.last_name }}
+                    <input type="text" name="last_name" id="id_last_name" value="{{ form.last_name.value|default:'' }}" 
+                           pattern="[A-Za-z\s'-]+" 
+                           title="Last name can only contain letters, spaces, hyphens, and apostrophes"
+                           class="form-input">
+                    {% if form.last_name.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.last_name.errors.0 }}</p>
+                    {% endif %}
                 </div>
             </div>
             
             <div>
                 <label for="id_email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                {{ form.email }}
+                <input type="email" value="{{ user.email }}" readonly 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
+                       id="id_email">
+                <p class="text-xs text-gray-500 mt-1">Email cannot be changed</p>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -46,11 +61,23 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label for="id_phone" class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                    {{ form.phone }}
+                    <input type="tel" name="phone" id="id_phone" value="{{ form.phone.value|default:'' }}" 
+                           pattern="[\d\s\-\(\)\+]+" 
+                           title="Phone can only contain numbers, spaces, hyphens, parentheses, and + sign"
+                           class="form-input">
+                    {% if form.phone.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.phone.errors.0 }}</p>
+                    {% endif %}
                 </div>
                 <div>
                     <label for="id_occupation" class="block text-sm font-medium text-gray-700 mb-2">Occupation</label>
-                    {{ form.occupation }}
+                    <input type="text" name="occupation" id="id_occupation" value="{{ form.occupation.value|default:'' }}" 
+                           pattern="[A-Za-z0-9\s'-]+" 
+                           title="Occupation can only contain letters, numbers, spaces, hyphens, and apostrophes"
+                           class="form-input">
+                    {% if form.occupation.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.occupation.errors.0 }}</p>
+                    {% endif %}
                 </div>
             </div>
             
@@ -59,11 +86,23 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label for="id_emergency_contact" class="block text-sm font-medium text-gray-700 mb-2">Emergency Contact Name</label>
-                        {{ form.emergency_contact }}
+                        <input type="text" name="emergency_contact" id="id_emergency_contact" value="{{ form.emergency_contact.value|default:'' }}" 
+                               pattern="[A-Za-z\s'-]+" 
+                               title="Emergency contact name can only contain letters, spaces, hyphens, and apostrophes"
+                               class="form-input">
+                        {% if form.emergency_contact.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.emergency_contact.errors.0 }}</p>
+                        {% endif %}
                     </div>
                     <div>
                         <label for="id_emergency_phone" class="block text-sm font-medium text-gray-700 mb-2">Emergency Contact Phone</label>
-                        {{ form.emergency_phone }}
+                        <input type="tel" name="emergency_phone" id="id_emergency_phone" value="{{ form.emergency_phone.value|default:'' }}" 
+                               pattern="[\d\s\-\(\)\+]+" 
+                               title="Emergency phone can only contain numbers, spaces, hyphens, parentheses, and + sign"
+                               class="form-input">
+                        {% if form.emergency_phone.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.emergency_phone.errors.0 }}</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -113,4 +152,80 @@
     @apply appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fields that should only accept letters (with spaces, hyphens, apostrophes)
+    const letterFields = ['id_first_name', 'id_last_name', 'id_emergency_contact'];
+    
+    // Fields that should only accept numbers (with phone formatting characters)
+    const numberFields = ['id_phone', 'id_emergency_phone'];
+    
+    // Fields that accept letters and numbers
+    const alphanumericFields = ['id_occupation'];
+    
+    // Function to validate letter-only fields
+    function setupLetterField(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', function() {
+                // Remove any numbers and special characters except spaces, hyphens, apostrophes
+                this.value = this.value.replace(/[^A-Za-z\s'-]/g, '');
+            });
+            
+            field.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const paste = (e.clipboardData || window.clipboardData).getData('text');
+                const cleaned = paste.replace(/[^A-Za-z\s'-]/g, '');
+                this.value = cleaned;
+            });
+        }
+    }
+    
+    // Function to validate number-only fields (phone)
+    function setupNumberField(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', function() {
+                // Allow only numbers, spaces, hyphens, parentheses, and +
+                this.value = this.value.replace(/[^\d\s\-\(\)\+]/g, '');
+            });
+            
+            field.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const paste = (e.clipboardData || window.clipboardData).getData('text');
+                const cleaned = paste.replace(/[^\d\s\-\(\)\+]/g, '');
+                this.value = cleaned;
+            });
+        }
+    }
+    
+    // Function to validate alphanumeric fields
+    function setupAlphanumericField(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', function() {
+                // Allow letters, numbers, spaces, hyphens, apostrophes
+                this.value = this.value.replace(/[^A-Za-z0-9\s'-]/g, '');
+            });
+            
+            field.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const paste = (e.clipboardData || window.clipboardData).getData('text');
+                const cleaned = paste.replace(/[^A-Za-z0-9\s'-]/g, '');
+                this.value = cleaned;
+            });
+        }
+    }
+    
+    // Setup all letter fields
+    letterFields.forEach(fieldId => setupLetterField(fieldId));
+    
+    // Setup all number fields
+    numberFields.forEach(fieldId => setupNumberField(fieldId));
+    
+    // Setup alphanumeric fields
+    alphanumericFields.forEach(fieldId => setupAlphanumericField(fieldId));
+});
+</script>
 {% endblock %}

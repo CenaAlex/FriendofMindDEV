@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
+import re
 from .models import User, MoodEntry, Organization, OrganizationStaff
 
 class CustomUserCreationForm(UserCreationForm):
@@ -20,6 +21,35 @@ class CustomUserCreationForm(UserCreationForm):
         super().__init__(*args, **kwargs)
         for field in self.fields:
             self.fields[field].widget.attrs.update({'class': 'form-input'})
+    
+    def clean_first_name(self):
+        first_name = self.cleaned_data.get('first_name')
+        if first_name:
+            # Only allow letters, spaces, hyphens, and apostrophes
+            if not re.match(r"^[A-Za-z\s'-]+$", first_name):
+                raise forms.ValidationError("First name can only contain letters, spaces, hyphens, and apostrophes.")
+        return first_name
+    
+    def clean_last_name(self):
+        last_name = self.cleaned_data.get('last_name')
+        if last_name:
+            # Only allow letters, spaces, hyphens, and apostrophes
+            if not re.match(r"^[A-Za-z\s'-]+$", last_name):
+                raise forms.ValidationError("Last name can only contain letters, spaces, hyphens, and apostrophes.")
+        return last_name
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email:
+            # Django's EmailField already validates format, but we can add additional check
+            email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            if not re.match(email_pattern, email):
+                raise forms.ValidationError("Please enter a valid email address (e.g., name@example.com).")
+            
+            # Check if email already exists
+            if User.objects.filter(email=email).exists():
+                raise forms.ValidationError("This email address is already registered. Please use a different email or try logging in.")
+        return email
 
 class OrganizationRegistrationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -35,6 +65,32 @@ class OrganizationRegistrationForm(UserCreationForm):
         super().__init__(*args, **kwargs)
         for field in self.fields:
             self.fields[field].widget.attrs.update({'class': 'form-input'})
+    
+    def clean_first_name(self):
+        first_name = self.cleaned_data.get('first_name')
+        if first_name:
+            if not re.match(r"^[A-Za-z\s'-]+$", first_name):
+                raise forms.ValidationError("First name can only contain letters, spaces, hyphens, and apostrophes.")
+        return first_name
+    
+    def clean_last_name(self):
+        last_name = self.cleaned_data.get('last_name')
+        if last_name:
+            if not re.match(r"^[A-Za-z\s'-]+$", last_name):
+                raise forms.ValidationError("Last name can only contain letters, spaces, hyphens, and apostrophes.")
+        return last_name
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email:
+            email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            if not re.match(email_pattern, email):
+                raise forms.ValidationError("Please enter a valid email address (e.g., name@example.com).")
+            
+            # Check if email already exists
+            if User.objects.filter(email=email).exists():
+                raise forms.ValidationError("This email address is already registered. Please use a different email or try logging in.")
+        return email
     
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -66,7 +122,7 @@ class OrganizationProfileForm(forms.ModelForm):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'email', 'birth_date', 'phone', 
+        fields = ('first_name', 'last_name', 'birth_date', 'phone', 
                  'gender', 'occupation', 'emergency_contact', 'emergency_phone')
         widgets = {
             'birth_date': forms.DateInput(attrs={'type': 'date'}),
@@ -76,6 +132,51 @@ class UserProfileForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field in self.fields:
             self.fields[field].widget.attrs.update({'class': 'form-input'})
+    
+    def clean_first_name(self):
+        first_name = self.cleaned_data.get('first_name')
+        if first_name:
+            if not re.match(r"^[A-Za-z\s'-]+$", first_name):
+                raise forms.ValidationError("First name can only contain letters, spaces, hyphens, and apostrophes.")
+        return first_name
+    
+    def clean_last_name(self):
+        last_name = self.cleaned_data.get('last_name')
+        if last_name:
+            if not re.match(r"^[A-Za-z\s'-]+$", last_name):
+                raise forms.ValidationError("Last name can only contain letters, spaces, hyphens, and apostrophes.")
+        return last_name
+    
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone')
+        if phone:
+            # Allow numbers, spaces, hyphens, parentheses, and + for international format
+            if not re.match(r"^[\d\s\-\(\)\+]+$", phone):
+                raise forms.ValidationError("Phone number can only contain numbers, spaces, hyphens, parentheses, and + sign.")
+        return phone
+    
+    def clean_emergency_contact(self):
+        emergency_contact = self.cleaned_data.get('emergency_contact')
+        if emergency_contact:
+            if not re.match(r"^[A-Za-z\s'-]+$", emergency_contact):
+                raise forms.ValidationError("Emergency contact name can only contain letters, spaces, hyphens, and apostrophes.")
+        return emergency_contact
+    
+    def clean_emergency_phone(self):
+        emergency_phone = self.cleaned_data.get('emergency_phone')
+        if emergency_phone:
+            # Allow numbers, spaces, hyphens, parentheses, and + for international format
+            if not re.match(r"^[\d\s\-\(\)\+]+$", emergency_phone):
+                raise forms.ValidationError("Emergency phone number can only contain numbers, spaces, hyphens, parentheses, and + sign.")
+        return emergency_phone
+    
+    def clean_occupation(self):
+        occupation = self.cleaned_data.get('occupation')
+        if occupation:
+            # Allow letters, numbers, spaces, hyphens, and apostrophes for job titles
+            if not re.match(r"^[A-Za-z0-9\s'-]+$", occupation):
+                raise forms.ValidationError("Occupation can only contain letters, numbers, spaces, hyphens, and apostrophes.")
+        return occupation
 
 class MoodEntryForm(forms.ModelForm):
     class Meta:

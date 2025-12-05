@@ -16,6 +16,7 @@ urlpatterns = [
     path('auth/login/', views.modal_login_view, name='modal_login'),
     path('auth/register/', views.modal_register_view, name='modal_register'),
     path('auth/org-register/', views.modal_organization_register_view, name='modal_organization_register'),
+    path('auth/check-email/', views.check_email_availability, name='check_email_availability'),
     path('logout/', views.logout_view, name='logout'),
     path('account-suspended/', views.account_suspended_view, name='account_suspended'),
     path('dashboard/', views.DashboardView.as_view(), name='dashboard'),

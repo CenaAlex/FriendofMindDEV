@@ -341,12 +341,16 @@
                             <div>
                                 <label for="id_first_name" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
                                 <input id="id_first_name" name="first_name" type="text" required 
+                                       pattern="[A-Za-z\s'-]+" 
+                                       title="First name can only contain letters, spaces, hyphens, and apostrophes"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
                             </div>
                             
                             <div>
                                 <label for="id_last_name" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
                                 <input id="id_last_name" name="last_name" type="text" required 
+                                       pattern="[A-Za-z\s'-]+" 
+                                       title="Last name can only contain letters, spaces, hyphens, and apostrophes"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
                             </div>
                         </div>
@@ -354,6 +358,8 @@
                         <div>
                             <label for="id_email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                             <input id="id_email" name="email" type="email" required 
+                                   pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" 
+                                   title="Please enter a valid email address (e.g., name@example.com)"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
                         </div>
                         
@@ -362,6 +368,9 @@
                             <input id="id_username" name="username" type="text" required 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
                         </div>
+                        
+                        <!-- Hidden role field - regular users should have role='user' -->
+                        <input type="hidden" name="role" value="user">
                         
                         <div class="grid grid-cols-2 gap-4">
                             <div>
@@ -425,12 +434,16 @@
                             <div>
                                 <label for="org_first_name" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
                                 <input id="org_first_name" name="first_name" type="text" required 
+                                       pattern="[A-Za-z\s'-]+" 
+                                       title="First name can only contain letters, spaces, hyphens, and apostrophes"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
                             </div>
                             
                             <div>
                                 <label for="org_last_name" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
                                 <input id="org_last_name" name="last_name" type="text" required 
+                                       pattern="[A-Za-z\s'-]+" 
+                                       title="Last name can only contain letters, spaces, hyphens, and apostrophes"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
                             </div>
                         </div>
@@ -438,6 +451,8 @@
                         <div>
                             <label for="org_email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                             <input id="org_email" name="email" type="email" required 
+                                   pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" 
+                                   title="Please enter a valid email address (e.g., name@example.com)"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3F6E6E] focus:border-transparent">
                         </div>
                         
@@ -589,12 +604,150 @@
             });
         });
         
+        // Validation: Prevent numbers in name fields
+        function validateNameField(input) {
+            // Remove any numbers that were entered
+            input.value = input.value.replace(/[0-9]/g, '');
+        }
+        
+        // Add input event listeners for name fields
+        document.addEventListener('DOMContentLoaded', function() {
+            // Regular user registration fields
+            const firstNameField = document.getElementById('id_first_name');
+            const lastNameField = document.getElementById('id_last_name');
+            const emailField = document.getElementById('id_email');
+            
+            // Organization registration fields
+            const orgFirstNameField = document.getElementById('org_first_name');
+            const orgLastNameField = document.getElementById('org_last_name');
+            const orgEmailField = document.getElementById('org_email');
+            
+            // Helper function to setup name field validation
+            function setupNameField(field) {
+                if (field) {
+                    field.addEventListener('input', function() {
+                        validateNameField(this);
+                    });
+                    field.addEventListener('paste', function(e) {
+                        e.preventDefault();
+                        const paste = (e.clipboardData || window.clipboardData).getData('text');
+                        const cleaned = paste.replace(/[0-9]/g, '');
+                        this.value = cleaned;
+                    });
+                }
+            }
+            
+            // Helper function to setup email field validation
+            function setupEmailField(field) {
+                if (field) {
+                    field.addEventListener('blur', function() {
+                        const email = this.value.trim();
+                        const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                        
+                        if (email && !emailPattern.test(email)) {
+                            this.setCustomValidity('Please enter a valid email address');
+                            this.classList.add('border-red-500');
+                            return;
+                        }
+                        
+                        // Check if email already exists (only for registration forms)
+                        if (email && emailPattern.test(email) && (field.id === 'id_email' || field.id === 'org_email')) {
+                            // Check email availability via AJAX
+                            fetch('{% url "core:check_email_availability" %}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                                },
+                                body: JSON.stringify({ email: email })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (!data.available) {
+                                    this.setCustomValidity('This email is already registered. Please use a different email or try logging in.');
+                                    this.classList.add('border-red-500');
+                                } else {
+                                    this.setCustomValidity('');
+                                    this.classList.remove('border-red-500');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error checking email:', error);
+                            });
+                        } else {
+                            this.setCustomValidity('');
+                            this.classList.remove('border-red-500');
+                        }
+                    });
+                }
+            }
+            
+            // Setup regular user registration fields
+            setupNameField(firstNameField);
+            setupNameField(lastNameField);
+            setupEmailField(emailField);
+            
+            // Setup organization registration fields
+            setupNameField(orgFirstNameField);
+            setupNameField(orgLastNameField);
+            setupEmailField(orgEmailField);
+        });
+        
         // Handle signup form submission
-        document.getElementById('signupForm').addEventListener('submit', function(e) {
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const formData = new FormData(this);
+            // Validate form before submission
+            const firstName = document.getElementById('id_first_name').value.trim();
+            const lastName = document.getElementById('id_last_name').value.trim();
+            const email = document.getElementById('id_email').value.trim();
             const errorDiv = document.getElementById('signupError');
+            
+            // Validate names (letters, spaces, hyphens, apostrophes only)
+            const namePattern = /^[A-Za-z\s'-]+$/;
+            if (!namePattern.test(firstName)) {
+                errorDiv.textContent = 'First name can only contain letters, spaces, hyphens, and apostrophes.';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            if (!namePattern.test(lastName)) {
+                errorDiv.textContent = 'Last name can only contain letters, spaces, hyphens, and apostrophes.';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            // Validate email format
+            const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailPattern.test(email)) {
+                errorDiv.textContent = 'Please enter a valid email address (e.g., name@example.com).';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            // Check email availability before submitting
+            try {
+                const emailCheckResponse = await fetch('{% url "core:check_email_availability" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                const emailCheckData = await emailCheckResponse.json();
+                if (!emailCheckData.available) {
+                    errorDiv.textContent = 'This email address is already registered. Please use a different email or try logging in.';
+                    errorDiv.classList.remove('hidden');
+                    document.getElementById('id_email').classList.add('border-red-500');
+                    return;
+                }
+            } catch (error) {
+                console.error('Error checking email:', error);
+            }
+            
+            const formData = new FormData(this);
             
             fetch('{% url "core:modal_register" %}', {
                 method: 'POST',
@@ -625,11 +778,60 @@
         });
         
         // Handle organization signup form submission
-        document.getElementById('orgSignupForm').addEventListener('submit', function(e) {
+        document.getElementById('orgSignupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const formData = new FormData(this);
+            // Validate form before submission
+            const firstName = document.getElementById('org_first_name').value.trim();
+            const lastName = document.getElementById('org_last_name').value.trim();
+            const email = document.getElementById('org_email').value.trim();
             const errorDiv = document.getElementById('orgSignupError');
+            
+            // Validate names (letters, spaces, hyphens, apostrophes only)
+            const namePattern = /^[A-Za-z\s'-]+$/;
+            if (!namePattern.test(firstName)) {
+                errorDiv.textContent = 'First name can only contain letters, spaces, hyphens, and apostrophes.';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            if (!namePattern.test(lastName)) {
+                errorDiv.textContent = 'Last name can only contain letters, spaces, hyphens, and apostrophes.';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            // Validate email format
+            const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailPattern.test(email)) {
+                errorDiv.textContent = 'Please enter a valid email address (e.g., name@example.com).';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            // Check email availability before submitting
+            try {
+                const emailCheckResponse = await fetch('{% url "core:check_email_availability" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                const emailCheckData = await emailCheckResponse.json();
+                if (!emailCheckData.available) {
+                    errorDiv.textContent = 'This email address is already registered. Please use a different email or try logging in.';
+                    errorDiv.classList.remove('hidden');
+                    document.getElementById('org_email').classList.add('border-red-500');
+                    return;
+                }
+            } catch (error) {
+                console.error('Error checking email:', error);
+            }
+            
+            const formData = new FormData(this);
             
             fetch('{% url "core:modal_organization_register" %}', {
                 method: 'POST',

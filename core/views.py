@@ -207,6 +207,25 @@ def modal_login_view(request):
         })
 
 @require_http_methods(["POST"])
+def check_email_availability(request):
+    """Check if email is available for registration"""
+    import json
+    data = json.loads(request.body)
+    email = data.get('email', '').strip()
+    
+    if not email:
+        return JsonResponse({'available': False, 'message': 'Email is required'})
+    
+    # Check if email already exists
+    from .models import User
+    exists = User.objects.filter(email=email).exists()
+    
+    return JsonResponse({
+        'available': not exists,
+        'message': 'Email already registered' if exists else 'Email is available'
+    })
+
+@require_http_methods(["POST"])
 def modal_register_view(request):
     """Handle registration from modal form"""
     form = CustomUserCreationForm(request.POST)
