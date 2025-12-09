@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import User, MoodEntry, Organization, OrganizationStaff
 
+<<<<<<< HEAD
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
     first_name = forms.CharField(max_length=30, required=True)
@@ -20,6 +21,55 @@ class CustomUserCreationForm(UserCreationForm):
         super().__init__(*args, **kwargs)
         for field in self.fields:
             self.fields[field].widget.attrs.update({'class': 'form-input'})
+=======
+
+class CustomUserCreationForm(UserCreationForm):
+    """
+    Registration form for regular users.
+
+    Note: We no longer expose the `role` field here. All users created via this
+    form are regular users (role='user'). This fixes an issue where registration
+    failed because the required `role` field was not rendered in the template.
+    """
+
+    email = forms.EmailField(required=True)
+    first_name = forms.CharField(max_length=30, required=True)
+    last_name = forms.CharField(max_length=30, required=True)
+    birth_date = forms.DateField(required=False, widget=forms.DateInput(attrs={"type": "date"}))
+    phone = forms.CharField(max_length=15, required=False)
+    gender = forms.ChoiceField(choices=User._meta.get_field("gender").choices, required=False)
+
+    class Meta:
+        model = User
+        fields = (
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "birth_date",
+            "phone",
+            "gender",
+            "password1",
+            "password2",
+        )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({"class": "form-input"})
+
+    def save(self, commit: bool = True) -> User:
+        """
+        Ensure all users created via the public registration form are
+        regular users by forcing role='user' regardless of any posted data.
+        """
+        user: User = super().save(commit=False)
+        # Force regular user role
+        user.role = "user"
+        if commit:
+            user.save()
+        return user
+>>>>>>> test
 
 class OrganizationRegistrationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -70,6 +120,11 @@ class UserProfileForm(forms.ModelForm):
                  'gender', 'occupation', 'emergency_contact', 'emergency_phone')
         widgets = {
             'birth_date': forms.DateInput(attrs={'type': 'date'}),
+<<<<<<< HEAD
+=======
+            'emergency_contact': forms.TextInput(),
+            'emergency_phone': forms.TextInput(),
+>>>>>>> test
         }
     
     def __init__(self, *args, **kwargs):

@@ -16,12 +16,21 @@
             <!-- Post Header -->
             <div class="flex items-start space-x-4 mb-4">
                 <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+<<<<<<< HEAD
                     <span class="text-white font-bold text-lg">{{ post.author.first_name.0|default:post.author.username.0|upper }}</span>
+=======
+                    <!-- Anonymous avatar (no identifying initial) -->
+                    <span class="text-white font-bold text-lg">A</span>
+>>>>>>> test
                 </div>
                 <div class="flex-1">
                     <div class="flex justify-between items-start">
                         <div>
+<<<<<<< HEAD
                             <h3 class="text-xl font-semibold text-white">{{ post.author.get_full_name|default:post.author.username }}</h3>
+=======
+                            <h3 class="text-xl font-semibold text-white">Anonymous</h3>
+>>>>>>> test
                             <p class="text-sm text-gray-400">{{ post.created_at|date:"F d, Y \a\t g:i A" }}{% if post.is_edited %} <span class="text-gray-500">(edited)</span>{% endif %}</p>
                         </div>
                         {% if post.author == request.user or request.user.is_staff or request.user.is_superuser %}

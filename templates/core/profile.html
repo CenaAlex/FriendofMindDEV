@@ -3,6 +3,7 @@
 {% block title %}Profile - FriendofMind{% endblock %}
 
 {% block content %}
+<<<<<<< HEAD
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="bg-white rounded-lg shadow p-8">
         <div class="text-center mb-8">
@@ -13,47 +14,105 @@
             <p class="text-gray-600">Member since {{ user.date_joined|date:"F Y" }}</p>
         </div>
 
+=======
+<div class="min-h-screen -mt-16 pt-16 bg-gradient-to-br from-primary via-secondary to-primary">
+    <div class="max-w-5xl mx-auto px-6 sm:px-10 lg:px-12 py-10">
+        <!-- Header -->
+        <div class="mb-8 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                    <i class="fas fa-user text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-white">
+                        {{ user.get_full_name|default:user.username }}
+                    </h1>
+                    <p class="text-sm text-white opacity-80">
+                        Member since {{ user.date_joined|date:"F Y" }}
+                    </p>
+                </div>
+            </div>
+            <div>
+                <a href="{% url 'core:dashboard' %}"
+                   class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium transition">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Profile Card -->
+        <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl shadow-xl p-6 sm:p-8">
+>>>>>>> test
         <form method="post" class="space-y-6">
             {% csrf_token %}
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
+<<<<<<< HEAD
                     <label for="id_first_name" class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
                     {{ form.first_name }}
                 </div>
                 <div>
                     <label for="id_last_name" class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+=======
+                    <label for="id_first_name" class="block text-sm font-medium text-gray-200 mb-2">First Name</label>
+                    {{ form.first_name }}
+                </div>
+                <div>
+                    <label for="id_last_name" class="block text-sm font-medium text-gray-200 mb-2">Last Name</label>
+>>>>>>> test
                     {{ form.last_name }}
                 </div>
             </div>
             
             <div>
+<<<<<<< HEAD
                 <label for="id_email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+=======
+                <label for="id_email" class="block text-sm font-medium text-gray-200 mb-2">Email</label>
+>>>>>>> test
                 {{ form.email }}
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
+<<<<<<< HEAD
                     <label for="id_birth_date" class="block text-sm font-medium text-gray-700 mb-2">Birth Date</label>
                     {{ form.birth_date }}
                 </div>
                 <div>
                     <label for="id_gender" class="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+=======
+                    <label for="id_birth_date" class="block text-sm font-medium text-gray-200 mb-2">Birth Date</label>
+                    {{ form.birth_date }}
+                </div>
+                <div>
+                    <label for="id_gender" class="block text-sm font-medium text-gray-200 mb-2">Gender</label>
+>>>>>>> test
                     {{ form.gender }}
                 </div>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
+<<<<<<< HEAD
                     <label for="id_phone" class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
                     {{ form.phone }}
                 </div>
                 <div>
                     <label for="id_occupation" class="block text-sm font-medium text-gray-700 mb-2">Occupation</label>
+=======
+                    <label for="id_phone" class="block text-sm font-medium text-gray-200 mb-2">Phone</label>
+                    {{ form.phone }}
+                </div>
+                <div>
+                    <label for="id_occupation" class="block text-sm font-medium text-gray-200 mb-2">Occupation</label>
+>>>>>>> test
                     {{ form.occupation }}
                 </div>
             </div>
             
+<<<<<<< HEAD
             <div class="border-t border-gray-200 pt-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Emergency Contact</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -63,13 +122,28 @@
                     </div>
                     <div>
                         <label for="id_emergency_phone" class="block text-sm font-medium text-gray-700 mb-2">Emergency Contact Phone</label>
+=======
+            <div class="border-t border-white border-opacity-20 pt-6 mt-4">
+                <h3 class="text-lg font-semibold text-white mb-4">Emergency Contact</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="id_emergency_contact" class="block text-sm font-medium text-gray-200 mb-2">Emergency Contact Name</label>
+                        {{ form.emergency_contact }}
+                    </div>
+                    <div>
+                        <label for="id_emergency_phone" class="block text-sm font-medium text-gray-200 mb-2">Emergency Contact Phone</label>
+>>>>>>> test
                         {{ form.emergency_phone }}
                     </div>
                 </div>
             </div>
             
             {% if form.errors %}
+<<<<<<< HEAD
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+=======
+                <div class="bg-red-500 bg-opacity-10 border border-red-400 text-red-200 px-4 py-3 rounded">
+>>>>>>> test
                     {% for field, errors in form.errors.items %}
                         {% for error in errors %}
                             <p>{{ error }}</p>
@@ -78,6 +152,7 @@
                 </div>
             {% endif %}
             
+<<<<<<< HEAD
             <div class="flex justify-between pt-6">
                 <a href="{% url 'core:dashboard' %}" 
                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg transition duration-200">
@@ -85,10 +160,16 @@
                 </a>
                 <button type="submit" 
                         class="bg-primary hover:bg-blue-700 text-white px-8 py-3 rounded-lg transition duration-200">
+=======
+            <div class="flex justify-end pt-6">
+                <button type="submit" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg transition duration-200 shadow-md">
+>>>>>>> test
                     <i class="fas fa-save mr-2"></i>Save Changes
                 </button>
             </div>
         </form>
+<<<<<<< HEAD
     </div>
 
     <!-- Account Statistics -->
@@ -104,13 +185,35 @@
         <div class="bg-white rounded-lg shadow p-6 text-center">
             <div class="text-3xl font-bold text-purple-600 mb-2">{{ user.date_joined|timesince }}</div>
             <div class="text-gray-600">Member For</div>
+=======
+        </div>
+
+        <!-- Account Statistics -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-center text-white">
+                <div class="text-3xl font-bold text-blue-400 mb-2">0</div>
+                <div class="text-gray-200">Assessments Taken</div>
+            </div>
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-center text-white">
+                <div class="text-3xl font-bold text-green-400 mb-2">0</div>
+                <div class="text-gray-200">Mood Entries</div>
+            </div>
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-center text-white">
+                <div class="text-3xl font-bold text-purple-400 mb-2">{{ user.date_joined|timesince }}</div>
+                <div class="text-gray-200">Member For</div>
+            </div>
+>>>>>>> test
         </div>
     </div>
 </div>
 
 <style>
 .form-input {
+<<<<<<< HEAD
     @apply appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm;
+=======
+    @apply appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white text-gray-900;
+>>>>>>> test
 }
 </style>
 {% endblock %}

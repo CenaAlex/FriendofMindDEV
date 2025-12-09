@@ -145,7 +145,11 @@
                             {% csrf_token %}
                             <button type="submit" 
                                class="w-full {% if user_detail.is_active %}bg-red-600 hover:bg-red-700{% else %}bg-green-600 hover:bg-green-700{% endif %} rounded-lg p-4 text-white transition duration-300"
+<<<<<<< HEAD
                                onclick="return confirm('Are you sure you want to {% if user_detail.is_active %}deactivate{% else %}activate{% endif %} this user?')">
+=======
+                               >
+>>>>>>> test
                                 <div class="flex items-center">
                                     <i class="fas fa-{% if user_detail.is_active %}ban{% else %}check{% endif %} text-xl mr-3"></i>
                                     <span>{% if user_detail.is_active %}Deactivate User{% else %}Activate User{% endif %}</span>
@@ -162,7 +166,11 @@
                             {% csrf_token %}
                             <button type="submit" 
                                class="w-full bg-rose-600 hover:bg-rose-700 rounded-lg p-4 text-white transition duration-300"
+<<<<<<< HEAD
                                onclick="return confirm('Are you sure you want to DELETE this user? This action cannot be undone!')">
+=======
+                               >
+>>>>>>> test
                                 <div class="flex items-center">
                                     <i class="fas fa-trash text-xl mr-3"></i>
                                     <span>Delete User Account</span>

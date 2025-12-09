@@ -10,6 +10,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
 from datetime import timedelta
+<<<<<<< HEAD
+=======
+from django.contrib.sessions.models import Session
+from django.conf import settings
+>>>>>>> test
 from .models import User, MoodEntry, Organization, OrganizationStaff
 from .forms import AdminOrganizationCreationForm, AdminUserEditForm, AdminUserCreateForm, AdminOrganizationEditForm
 from screening.models import Assessment, Question, AnswerChoice, UserAssessment
@@ -37,7 +42,12 @@ class AdminDashboardView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
         # User statistics
         context['total_users'] = User.objects.count()
         context['regular_users'] = User.objects.filter(role='user').count()
+<<<<<<< HEAD
         context['organizations'] = User.objects.filter(role='organization').count()
+=======
+        # Count actual Organization records, not just users with organization role
+        context['organizations'] = Organization.objects.count()
+>>>>>>> test
         context['verified_organizations'] = Organization.objects.filter(is_verified=True).count()
         context['unverified_organizations'] = Organization.objects.filter(is_verified=False).count()
         
@@ -215,9 +225,15 @@ def admin_analytics_view(request):
     context['total_users'] = User.objects.count()
     context['active_users'] = User.objects.filter(is_active=True).count()
     context['regular_users'] = User.objects.filter(role='user').count()
+<<<<<<< HEAD
     context['organizations'] = User.objects.filter(role='organization').count()
     
     # Total organizations (Organization model)
+=======
+    
+    # Count actual Organization records, not just users with organization role
+    context['organizations'] = Organization.objects.count()
+>>>>>>> test
     context['total_organizations'] = Organization.objects.count()
     
     # Assessment analytics
@@ -275,6 +291,7 @@ def admin_toggle_user_status(request, user_id):
     user.save()
     
     status = "activated" if user.is_active else "deactivated"
+<<<<<<< HEAD
     
     if user.is_active:
         messages.success(request, f'User "{user.username}" has been {status}. They can now log in.')
@@ -286,6 +303,25 @@ def admin_toggle_user_status(request, user_id):
             f'They will not be able to log in until reactivated.'
         )
     
+=======
+
+    # If the user has been deactivated, immediately log them out from all sessions
+    if not user.is_active:
+        # Iterate through all sessions and delete those belonging to this user
+        for session in Session.objects.all():
+            data = session.get_decoded()
+            if data.get('_auth_user_id') == str(user.id):
+                session.delete()
+
+        messages.warning(
+            request,
+            f'User "{user.username}" has been {status} and logged out from all active sessions. '
+            f'They will see the account suspended page if they try to log in again.'
+        )
+    else:
+        messages.success(request, f'User "{user.username}" has been {status}. They can now log in.')
+
+>>>>>>> test
     return redirect('core:admin_user_detail', user_id=user_id)
 
 @login_required
