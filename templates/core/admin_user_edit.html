@@ -205,21 +205,48 @@
     .form-control {
         width: 100%;
         padding: 0.75rem;
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(30, 41, 59, 0.95) !important;
         border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 0.5rem;
-        color: white;
+        color: white !important;
         transition: all 0.3s;
+        position: relative;
+        z-index: 1;
     }
     .form-control:focus {
         outline: none;
         border-color: rgba(59, 130, 246, 0.5);
-        background-color: rgba(255, 255, 255, 0.15);
+        background-color: rgba(30, 41, 59, 1) !important;
+        z-index: 10;
+    }
+    select.form-control {
+        appearance: auto;
+        -webkit-appearance: menulist;
+        -moz-appearance: menulist;
+        background-color: rgba(30, 41, 59, 0.95) !important;
+        cursor: pointer;
+    }
+    select.form-control option {
+        background-color: #1e293b !important;
+        color: white !important;
+        padding: 0.75rem;
+    }
+    select.form-control option:hover,
+    select.form-control option:checked {
+        background-color: #3b82f6 !important;
+        color: white !important;
     }
     input[type="checkbox"] {
         width: 1.25rem;
         height: 1.25rem;
         cursor: pointer;
+        accent-color: #3b82f6;
+    }
+    input[type="date"] {
+        color-scheme: dark;
+    }
+    .grid > div {
+        position: relative;
     }
 </style>
 {% endblock %}

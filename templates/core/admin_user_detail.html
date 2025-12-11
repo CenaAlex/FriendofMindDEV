@@ -50,14 +50,14 @@
                         <div>
                             <label class="block text-gray-300 text-sm font-medium mb-2">Status</label>
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                {% if user.is_active %}bg-green-100 text-green-800
+                                {% if user_detail.is_active %}bg-green-100 text-green-800
                                 {% else %}bg-red-100 text-red-800{% endif %}">
-                                {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                                {% if user_detail.is_active %}Active{% else %}Inactive{% endif %}
                             </span>
                         </div>
                         <div>
                             <label class="block text-gray-300 text-sm font-medium mb-2">Date Joined</label>
-                            <p class="text-white">{{ user.date_joined|date:"M d, Y" }}</p>
+                            <p class="text-white">{{ user_detail.date_joined|date:"M d, Y" }}</p>
                         </div>
                     </div>
                 </div>
@@ -173,7 +173,7 @@
                 </div>
 
                 <!-- Organization Info (if applicable) -->
-                {% if user.role == 'organization' and organization %}
+                {% if user_detail.role == 'organization' and organization %}
                 <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg p-6">
                     <h2 class="text-xl font-bold text-white mb-4">Organization Info</h2>
                     <div class="space-y-3 text-sm">
@@ -217,8 +217,8 @@
                         </div>
                         <div class="flex items-center justify-between text-sm">
                             <span class="text-gray-300">Account Status</span>
-                            <span class="{% if user.is_active %}text-green-400{% else %}text-red-400{% endif %} font-medium">
-                                {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                            <span class="{% if user_detail.is_active %}text-green-400{% else %}text-red-400{% endif %} font-medium">
+                                {% if user_detail.is_active %}Active{% else %}Inactive{% endif %}
                             </span>
                         </div>
                     </div>

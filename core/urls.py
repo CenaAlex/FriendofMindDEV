@@ -18,6 +18,7 @@ urlpatterns = [
     path('auth/org-register/', views.modal_organization_register_view, name='modal_organization_register'),
     path('logout/', views.logout_view, name='logout'),
     path('account-suspended/', views.account_suspended_view, name='account_suspended'),
+    path('request-reactivation/', views.request_reactivation_view, name='request_reactivation'),
     path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
     path('profile/', views.ProfileView.as_view(), name='profile'),
     path('mood/add/', views.AddMoodEntryView.as_view(), name='add_mood'),

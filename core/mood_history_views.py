@@ -95,6 +95,30 @@ def mood_history_summary(request):
         trend = 'stable'
         insights = []
     
+    # Prepare chart data - mood entries ordered by date for line chart
+    chart_entries = MoodEntry.objects.filter(
+        user=request.user,
+        date__gte=start_date,
+        date__lte=end_date
+    ).order_by('date')
+    
+    chart_labels = []
+    chart_data = []
+    chart_colors = []
+    
+    for entry in chart_entries:
+        chart_labels.append(entry.date.strftime('%b %d'))
+        chart_data.append(entry.mood)
+        # Color based on mood level
+        if entry.mood >= 4:
+            chart_colors.append('#22c55e')  # Green for happy
+        elif entry.mood == 3:
+            chart_colors.append('#3b82f6')  # Blue for neutral
+        else:
+            chart_colors.append('#ef4444')  # Red for sad
+    
+    import json
+    
     context = {
         'mood_entries': mood_entries,
         'total_entries': total_entries,
@@ -118,6 +142,10 @@ def mood_history_summary(request):
         'days_filter': days,
         'start_date': start_date,
         'end_date': end_date,
+        # Chart data
+        'chart_labels': json.dumps(chart_labels),
+        'chart_data': json.dumps(chart_data),
+        'chart_colors': json.dumps(chart_colors),
     }
     
     return render(request, 'core/mood_history_summary.html', context)

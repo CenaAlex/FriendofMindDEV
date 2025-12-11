@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load core_filters %}
 
 {% block title %}Report Post{% endblock %}
 
@@ -10,7 +11,7 @@
             <p class="text-gray-300 mb-6">Help us maintain a safe and supportive community by reporting inappropriate content.</p>
             
             <div class="bg-gray-800 rounded-lg p-4 mb-6">
-                <p class="text-sm text-gray-400 mb-2">Reporting post by {{ post.author.username }}</p>
+                <p class="text-sm text-gray-400 mb-2">Reporting post by {{ post|anonymous_id }}</p>
                 {% if post.content %}
                 <p class="text-gray-200">{{ post.content|truncatewords:50 }}</p>
                 {% endif %}

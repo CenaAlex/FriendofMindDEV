@@ -182,18 +182,27 @@ def admin_review_post_report(request, report_id):
                 messages.success(request, 'Report has been dismissed.')
             
             elif action == 'delete_post':
-                post.delete()
-                updated_report.status = 'action_taken'
-                messages.success(request, 'Post has been permanently deleted.')
+                # Store author reference before deletion
+                post_author = post.author
+                post_title = post.content[:50] if post.content else 'Your post'
                 
-                # Notify post author
+                # Notify post author BEFORE deleting (since post will be gone)
                 Notification.objects.create(
-                    user=post.author,
+                    user=post_author,
                     notification_type='admin',
                     title='Your Post Was Removed',
-                    message='Your post was removed by moderators for violating community guidelines.',
+                    message=f'Your post "{post_title}..." was removed by moderators for violating community guidelines. Please review our community guidelines to ensure your future posts comply.',
                     link_url='/forum/'
                 )
+                
+                # Delete related notifications that reference this post
+                Notification.objects.filter(link_url__contains=f'/forum/post/{post.id}').delete()
+                
+                # Delete the post (report will be cascade-deleted automatically)
+                post.delete()
+                
+                messages.success(request, 'Post has been permanently deleted and user notified.')
+                return redirect('core:admin_post_reports')
             
             updated_report.save()
             return redirect('core:admin_post_reports')
@@ -253,18 +262,24 @@ def admin_review_comment_report(request, report_id):
                 messages.success(request, 'Report has been dismissed.')
             
             elif action == 'delete_comment':
-                comment.delete()
-                updated_report.status = 'action_taken'
-                messages.success(request, 'Comment has been permanently deleted.')
+                # Store author reference before deletion
+                comment_author = comment.author
+                comment_content = comment.content[:50] if comment.content else 'Your comment'
                 
-                # Notify comment author
+                # Notify comment author BEFORE deleting
                 Notification.objects.create(
-                    user=comment.author,
+                    user=comment_author,
                     notification_type='admin',
                     title='Your Comment Was Removed',
-                    message='Your comment was removed by moderators for violating community guidelines.',
+                    message=f'Your comment "{comment_content}..." was removed by moderators for violating community guidelines. Please review our community guidelines to ensure your future comments comply.',
                     link_url='/forum/'
                 )
+                
+                # Delete the comment (report will be cascade-deleted automatically)
+                comment.delete()
+                
+                messages.success(request, 'Comment has been permanently deleted and user notified.')
+                return redirect('core:admin_comment_reports')
             
             updated_report.save()
             return redirect('core:admin_comment_reports')

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load core_filters %}
 
 {% block title %}Forum Post{% endblock %}
 
@@ -15,13 +16,21 @@
         <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 mb-6 border border-gray-700">
             <!-- Post Header -->
             <div class="flex items-start space-x-4 mb-4">
-                <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                    <span class="text-white font-bold text-lg">{{ post.author.first_name.0|default:post.author.username.0|upper }}</span>
+                <div class="w-12 h-12 rounded-full {% if post.author.role == 'organization' %}bg-green-600{% else %}bg-gray-600{% endif %} flex items-center justify-center flex-shrink-0">
+                    {% if post.author.role == 'organization' %}
+                    <span class="text-white font-bold text-lg">{{ post.author.first_name.0|default:'O' }}</span>
+                    {% else %}
+                    <i class="fas fa-user-secret text-white text-xl"></i>
+                    {% endif %}
                 </div>
                 <div class="flex-1">
                     <div class="flex justify-between items-start">
                         <div>
-                            <h3 class="text-xl font-semibold text-white">{{ post.author.get_full_name|default:post.author.username }}</h3>
+                            {% if post.author.role == 'organization' %}
+                            <h3 class="text-xl font-semibold text-white">{{ post.author.get_full_name|default:post.author.username }} <span class="text-xs bg-green-600 px-2 py-0.5 rounded ml-1">Organization</span></h3>
+                            {% else %}
+                            <h3 class="text-xl font-semibold text-white">{{ post|anonymous_id }} <span class="text-xs bg-gray-600 px-2 py-0.5 rounded ml-1">Member</span></h3>
+                            {% endif %}
                             <p class="text-sm text-gray-400">{{ post.created_at|date:"F d, Y \a\t g:i A" }}{% if post.is_edited %} <span class="text-gray-500">(edited)</span>{% endif %}</p>
                         </div>
                         {% if post.author == request.user or request.user.is_staff or request.user.is_superuser %}
@@ -75,8 +84,12 @@
             <form method="post" action="{% url 'core:forum_add_comment' post.id %}" class="mb-8">
                 {% csrf_token %}
                 <div class="flex items-start space-x-4">
-                    <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                        <span class="text-white font-bold">{{ request.user.first_name.0|default:request.user.username.0|upper }}</span>
+                    <div class="w-10 h-10 rounded-full {% if request.user.role == 'organization' %}bg-green-600{% else %}bg-gray-600{% endif %} flex items-center justify-center flex-shrink-0">
+                        {% if request.user.role == 'organization' %}
+                        <span class="text-white font-bold">{{ request.user.first_name.0|default:'O' }}</span>
+                        {% else %}
+                        <i class="fas fa-user-secret text-white"></i>
+                        {% endif %}
                     </div>
                     <div class="flex-1">
                         {{ comment_form.content }}
@@ -94,13 +107,21 @@
                 {% for comment in post.comments.all %}
                 <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4 border border-gray-700">
                     <div class="flex items-start space-x-4">
-                        <div class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center flex-shrink-0">
-                            <span class="text-white font-bold">{{ comment.author.first_name.0|default:comment.author.username.0|upper }}</span>
+                        <div class="w-10 h-10 rounded-full {% if comment.author.role == 'organization' %}bg-green-600{% else %}bg-gray-600{% endif %} flex items-center justify-center flex-shrink-0">
+                            {% if comment.author.role == 'organization' %}
+                            <span class="text-white font-bold">{{ comment.author.first_name.0|default:'O' }}</span>
+                            {% else %}
+                            <i class="fas fa-user-secret text-white"></i>
+                            {% endif %}
                         </div>
                         <div class="flex-1">
                             <div class="flex justify-between items-start mb-2">
                                 <div>
-                                    <h4 class="font-semibold text-white">{{ comment.author.get_full_name|default:comment.author.username }}</h4>
+                                    {% if comment.author.role == 'organization' %}
+                                    <h4 class="font-semibold text-white">{{ comment.author.get_full_name|default:comment.author.username }} <span class="text-xs bg-green-600 px-2 py-0.5 rounded ml-1">Organization</span></h4>
+                                    {% else %}
+                                    <h4 class="font-semibold text-white">{{ comment|anonymous_id }}</h4>
+                                    {% endif %}
                                     <p class="text-xs text-gray-400">{{ comment.created_at|timesince }} ago{% if comment.is_edited %} <span class="text-gray-500">(edited)</span>{% endif %}</p>
                                 </div>
                                 <div class="flex space-x-3">

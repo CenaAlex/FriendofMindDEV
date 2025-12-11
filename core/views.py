@@ -137,23 +137,53 @@ class AddMoodEntryView(LoginRequiredMixin, CreateView):
         return super().post(request, *args, **kwargs)
 
 @login_required
+@login_required
 def mood_chart_data(request):
+    """Return mood data for the dashboard chart"""
     user = request.user
     
-    week_ago = timezone.now() - timedelta(days=7)
+    # First try to get data from the last 7 days
+    today = timezone.now()
+    week_ago = today - timedelta(days=7)
+    
     moods = MoodEntry.objects.filter(
         user=user,
         date__gte=week_ago
-    ).order_by('date').values('mood', 'date')
+    ).order_by('date')
+    
+    period = 'last_7_days'
+    period_label = 'Last 7 Days'
+    
+    # If no data in last 7 days, get all available data (up to 30 entries)
+    if not moods.exists():
+        moods = MoodEntry.objects.filter(user=user).order_by('-date')[:30]
+        if moods.exists():
+            # Reverse to show oldest first for chart
+            moods = list(moods)[::-1]
+            period = 'all_available'
+            oldest_date = moods[0].date if moods else None
+            newest_date = moods[-1].date if moods else None
+            if oldest_date and newest_date:
+                period_label = f"{oldest_date.strftime('%b %d')} - {newest_date.strftime('%b %d, %Y')}"
+            else:
+                period_label = 'All Available Data'
     
     mood_data = []
     for mood in moods:
+        mood_obj = mood if isinstance(mood, MoodEntry) else mood
         mood_data.append({
-            'mood': mood['mood'],
-            'date': mood['date'].strftime('%Y-%m-%d')
+            'mood': mood_obj.mood,
+            'date': mood_obj.date.strftime('%Y-%m-%d'),
+            'display_date': mood_obj.date.strftime('%b %d'),
+            'notes': mood_obj.notes[:50] if mood_obj.notes else ''
         })
     
-    return JsonResponse({'moods': mood_data})
+    return JsonResponse({
+        'moods': mood_data, 
+        'count': len(mood_data),
+        'period': period,
+        'period_label': period_label
+    })
 
 class MoodHistoryView(LoginRequiredMixin, ListView):
     model = MoodEntry
@@ -170,7 +200,75 @@ def logout_view(request):
 
 def account_suspended_view(request):
     """View for suspended account page"""
-    return render(request, 'core/account_suspended.html')
+    # Get deactivated user info from session (set by middleware)
+    deactivated_username = request.session.get('deactivated_username', '')
+    deactivated_email = request.session.get('deactivated_email', '')
+    
+    context = {
+        'deactivated_username': deactivated_username,
+        'deactivated_email': deactivated_email,
+    }
+    return render(request, 'core/account_suspended.html', context)
+
+
+@require_http_methods(["POST"])
+def request_reactivation_view(request):
+    """Handle account reactivation requests from suspended users"""
+    from .feedback_models import Feedback, Notification
+    from .models import User
+    
+    username = request.POST.get('username', '')
+    email = request.POST.get('email', '')
+    contact_email = request.POST.get('contact_email', '')
+    reason = request.POST.get('reason', '')
+    
+    if not reason or not contact_email:
+        return JsonResponse({
+            'success': False,
+            'message': 'Please provide a reason and contact email.'
+        })
+    
+    try:
+        # Create a feedback entry for the admin to review
+        feedback = Feedback.objects.create(
+            user=None,  # User is not authenticated
+            feedback_type='support',
+            subject=f'Account Reactivation Request - {username}',
+            message=f"""
+Account Reactivation Request
+
+Username: {username}
+Original Email: {email}
+Contact Email: {contact_email}
+
+Reason for Reactivation:
+{reason}
+            """.strip(),
+            status='open'
+        )
+        
+        # Notify all admin users
+        admin_users = User.objects.filter(is_staff=True)
+        for admin in admin_users:
+            Notification.objects.create(
+                user=admin,
+                title='Account Reactivation Request',
+                message=f'User "{username}" has requested account reactivation.',
+                notification_type='system',
+                link_url=f'/system-admin/users/?search={username}'
+            )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Your reactivation request has been submitted.'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': 'An error occurred. Please try again later.'
+        })
+
 
 @require_http_methods(["POST"])
 def modal_login_view(request):
@@ -179,22 +277,40 @@ def modal_login_view(request):
     password = request.POST.get('password')
     
     if username and password:
+        # First check if user exists and is deactivated
+        # (Django's authenticate() returns None for inactive users)
+        from django.db.models import Q
+        try:
+            existing_user = User.objects.get(Q(username=username) | Q(email=username))
+            if not existing_user.is_active:
+                # User exists but is deactivated - verify password before redirecting
+                if existing_user.check_password(password):
+                    # Password correct - store info and redirect to suspended page
+                    request.session['deactivated_username'] = existing_user.username
+                    request.session['deactivated_email'] = existing_user.email
+                    return JsonResponse({
+                        'success': True,  # "successful" to trigger redirect
+                        'message': 'Account suspended',
+                        'redirect_url': str(reverse_lazy('core:account_suspended'))
+                    })
+                else:
+                    # Wrong password - show generic error
+                    return JsonResponse({
+                        'success': False, 
+                        'message': 'Invalid username or password.'
+                    })
+        except User.DoesNotExist:
+            pass  # User doesn't exist, continue with normal auth flow
+        
+        # Normal authentication for active users
         user = authenticate(request, username=username, password=password)
         if user is not None:
-            if user.is_active:
-                login(request, user)
-                return JsonResponse({
-                    'success': True, 
-                    'message': 'Login successful!',
-                    'redirect_url': reverse_lazy('core:dashboard')
-                })
-            else:
-                # Account is suspended - redirect to suspended page
-                return JsonResponse({
-                    'success': True,  # Still "successful" but redirect to suspended page
-                    'message': 'Account suspended',
-                    'redirect_url': reverse_lazy('core:account_suspended')
-                })
+            login(request, user)
+            return JsonResponse({
+                'success': True, 
+                'message': 'Login successful!',
+                'redirect_url': str(reverse_lazy('core:dashboard'))
+            })
         else:
             return JsonResponse({
                 'success': False, 
@@ -217,13 +333,58 @@ def modal_register_view(request):
         return JsonResponse({
             'success': True, 
             'message': 'Registration successful! Welcome to FriendofMind.',
-            'redirect_url': reverse_lazy('core:dashboard')
+            'redirect_url': str(reverse_lazy('core:dashboard'))
         })
     else:
-        # Return form errors
+        # Return form errors with user-friendly messages
         errors = {}
+        error_messages = {
+            'username': {
+                'required': 'Username is required.',
+                'unique': 'This username is already taken. Please choose another.',
+                'invalid': 'Username can only contain letters, numbers, and @/./+/-/_ characters.',
+            },
+            'email': {
+                'required': 'Email address is required.',
+                'unique': 'This email is already registered. Try logging in instead.',
+                'invalid': 'Please enter a valid email address.',
+            },
+            'password1': {
+                'required': 'Password is required.',
+            },
+            'password2': {
+                'required': 'Please confirm your password.',
+                'password_mismatch': 'The two passwords do not match.',
+            },
+            'first_name': {
+                'required': 'First name is required.',
+            },
+            'last_name': {
+                'required': 'Last name is required.',
+            },
+        }
+        
         for field, field_errors in form.errors.items():
-            errors[field] = field_errors[0] if field_errors else ''
+            if field_errors:
+                error_text = str(field_errors[0])
+                # Check for common password errors and make them user-friendly
+                if 'too common' in error_text.lower():
+                    errors[field] = 'This password is too common. Please choose a stronger password (e.g., MyStr0ng!Pass).'
+                elif 'too short' in error_text.lower():
+                    errors[field] = 'Password must be at least 8 characters long.'
+                elif 'too similar' in error_text.lower():
+                    errors[field] = 'Password is too similar to your username. Please choose a different password.'
+                elif 'entirely numeric' in error_text.lower():
+                    errors[field] = 'Password cannot be entirely numbers. Please include letters.'
+                elif 'already exists' in error_text.lower() or 'already registered' in error_text.lower():
+                    if field == 'username':
+                        errors[field] = 'This username is already taken. Please choose another.'
+                    elif field == 'email':
+                        errors[field] = 'This email is already registered. Try logging in instead.'
+                    else:
+                        errors[field] = error_text
+                else:
+                    errors[field] = error_text
         
         return JsonResponse({
             'success': False, 

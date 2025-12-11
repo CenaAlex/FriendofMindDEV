@@ -178,3 +178,5 @@ python manage.py shell -c "from core.models import User; User.objects.create_use
 
 Happy Testing! 🚀
 
+
+

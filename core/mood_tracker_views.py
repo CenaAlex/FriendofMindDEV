@@ -55,12 +55,18 @@ def check_mood_logged_today(request):
             'mood_logged': True  # Always return True for admins to prevent popup
         })
     
+    # Organizations don't log mood either
+    if hasattr(request.user, 'role') and request.user.role == 'organization':
+        return JsonResponse({
+            'mood_logged': True  # Always return True for organizations to prevent popup
+        })
+    
     today = timezone.now().date()
     
-    # Check if user already logged mood today
+    # Check if user already logged mood today (date__date for DateTimeField)
     mood_logged = MoodEntry.objects.filter(
         user=request.user,
-        date=today
+        date__date=today
     ).exists()
     
     return JsonResponse({
@@ -79,6 +85,13 @@ def log_mood(request):
             'message': 'Admins cannot log mood entries. You can view and analyze user data instead.'
         })
     
+    # Also check if user role is organization
+    if hasattr(request.user, 'role') and request.user.role == 'organization':
+        return JsonResponse({
+            'success': False,
+            'message': 'Organizations cannot log mood entries.'
+        })
+    
     try:
         mood_level = int(request.POST.get('mood_level'))
         notes = request.POST.get('notes', '').strip()
@@ -89,24 +102,25 @@ def log_mood(request):
                 'message': 'Invalid mood level'
             })
         
-        today = timezone.now().date()
+        today = timezone.now()
+        today_date = today.date()
         
-        # Check if already logged today
+        # Check if already logged today (using date comparison)
         existing_entry = MoodEntry.objects.filter(
             user=request.user,
-            date=today
+            date__date=today_date
         ).first()
         
         if existing_entry:
             # Update existing entry
-            existing_entry.mood_level = mood_level
+            existing_entry.mood = mood_level
             existing_entry.notes = notes
             existing_entry.save()
         else:
             # Create new entry
             MoodEntry.objects.create(
                 user=request.user,
-                mood_level=mood_level,
+                mood=mood_level,
                 notes=notes,
                 date=today
             )
@@ -162,7 +176,7 @@ def log_mood(request):
 def get_mood_stats(request):
     """Get user's mood statistics for display"""
     # Get last 30 days of mood entries
-    thirty_days_ago = timezone.now().date() - timedelta(days=30)
+    thirty_days_ago = timezone.now() - timedelta(days=30)
     
     mood_entries = MoodEntry.objects.filter(
         user=request.user,
@@ -170,7 +184,7 @@ def get_mood_stats(request):
     ).order_by('-date')
     
     if mood_entries.exists():
-        avg_mood = sum(entry.mood_level for entry in mood_entries) / mood_entries.count()
+        avg_mood = sum(entry.mood for entry in mood_entries) / mood_entries.count()
         streak = calculate_streak(request.user)
     else:
         avg_mood = 0
@@ -190,7 +204,7 @@ def calculate_streak(user):
     
     current_date = today
     while True:
-        if MoodEntry.objects.filter(user=user, date=current_date).exists():
+        if MoodEntry.objects.filter(user=user, date__date=current_date).exists():
             streak += 1
             current_date -= timedelta(days=1)
         else:

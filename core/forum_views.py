@@ -55,6 +55,14 @@ class ForumPostDetailView(LoginRequiredMixin, DetailView):
             Prefetch('comments', queryset=ForumComment.objects.filter(is_hidden=False).select_related('author').order_by('created_at'))
         )
     
+    def get(self, request, *args, **kwargs):
+        """Handle case where post doesn't exist or is hidden"""
+        try:
+            return super().get(request, *args, **kwargs)
+        except:
+            messages.warning(request, 'This post is no longer available. It may have been deleted or removed.')
+            return redirect('core:forum_list')
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['comment_form'] = ForumCommentForm()
@@ -123,6 +131,8 @@ def delete_post(request, post_id):
         return redirect('core:forum_post_detail', post_id=post_id)
     
     if request.method == 'POST':
+        # Delete related notifications to prevent broken links
+        Notification.objects.filter(link_url__contains=f'/forum/post/{post_id}/').delete()
         post.delete()
         messages.success(request, 'Post has been deleted.')
         return redirect('core:forum_list')

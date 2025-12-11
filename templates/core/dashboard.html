@@ -53,26 +53,32 @@
                 </a>
 
                 <div class="bg-gradient-to-br from-blue-50 to-green-50 rounded-lg p-6 mb-6 border border-blue-200">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-[#304758]">Mood Trend (Last 7 Days)</h3>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-lg font-semibold text-[#304758]">
+                            Mood Trend <span id="chartPeriodLabel" class="text-sm font-normal text-gray-500">(Last 7 Days)</span>
+                        </h3>
                         <div class="flex items-center space-x-2 text-sm text-gray-600">
-            <div class="flex items-center">
+                            <div class="flex items-center">
                                 <div class="w-3 h-3 bg-green-500 rounded-full mr-1"></div>
                                 <span>Good</span>
-                </div>
+                            </div>
                             <div class="flex items-center">
                                 <div class="w-3 h-3 bg-yellow-500 rounded-full mr-1"></div>
                                 <span>Neutral</span>
-                </div>
+                            </div>
                             <div class="flex items-center">
                                 <div class="w-3 h-3 bg-red-500 rounded-full mr-1"></div>
                                 <span>Low</span>
-            </div>
-        </div>
-    </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="chartAdvice" class="hidden text-xs text-blue-600 mb-3 bg-blue-50 px-3 py-2 rounded-lg">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        <span id="chartAdviceText">Log your mood daily for more accurate trend analysis!</span>
+                    </div>
 
                     <div class="relative">
-                        <div class="absolute left-0 top-0 h-40 flex flex-col justify-between text-xs text-gray-500 -ml-8">
+                        <div class="absolute left-0 top-0 flex flex-col justify-between text-xs text-gray-500 -ml-8" style="height: 140px;">
                             <span>5</span>
                             <span>4</span>
                             <span>3</span>
@@ -80,7 +86,7 @@
                             <span>1</span>
                         </div>
                         
-                        <div class="flex items-end justify-between h-40 ml-4" id="moodChart">
+                        <div class="flex items-end justify-around ml-4" id="moodChart" style="min-height: 160px;">
                             <div class="text-center text-gray-500 text-sm flex items-center justify-center h-full w-full">
                         <div>
                                     <i class="fas fa-chart-line text-4xl mb-2 text-blue-400"></i>
@@ -158,15 +164,9 @@
                     </a>
                     <a href="{% url 'mentalhealth:resource_list' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
                         <div class="w-16 h-16 bg-yellow-500 rounded-lg flex items-center justify-center mb-2 hover:bg-yellow-600">
-                            <i class="fas fa-folder text-white text-xl"></i>
+                            <i class="fas fa-book-open text-white text-xl"></i>
                         </div>
-                        <span class="text-sm text-white">Folder</span>
-                    </a>
-                    <a href="{% url 'core:dashboard' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
-                        <div class="w-16 h-16 bg-blue-300 rounded-lg flex items-center justify-center mb-2 hover:bg-blue-400">
-                            <i class="fas fa-bell text-white text-xl"></i>
-                        </div>
-                        <span class="text-sm text-white">Alert</span>
+                        <span class="text-sm text-white">Resources</span>
                     </a>
                 </div>
             </div>
@@ -248,26 +248,26 @@
             <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg shadow-lg p-6">
                 <h2 class="text-xl font-bold text-white mb-4">Online Forum</h2>
                 <div class="flex space-x-6">
-                    <a href="{% url 'core:profile' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
+                    <a href="{% url 'core:forum_list' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
                         <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mb-2 hover:bg-blue-600">
-                            <i class="fas fa-check text-white"></i>
-                </div>
-                        <span class="text-sm text-white">Create Forum</span>
+                            <i class="fas fa-plus text-white"></i>
+                        </div>
+                        <span class="text-sm text-white">Create Post</span>
                     </a>
-                    <a href="{% url 'core:dashboard' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
+                    <a href="{% url 'core:forum_list' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
                         <div class="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mb-2 hover:bg-orange-600">
-                            <i class="fas fa-comment text-white"></i>
-            </div>
+                            <i class="fas fa-comments text-white"></i>
+                        </div>
                         <span class="text-sm text-white">View & Reply</span>
                     </a>
-                    <a href="{% url 'core:dashboard' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
+                    <a href="{% url 'core:notifications_list' %}" class="text-center hover:scale-105 transition duration-300 cursor-pointer">
                         <div class="w-12 h-12 bg-blue-300 rounded-lg flex items-center justify-center mb-2 hover:bg-blue-400">
                             <i class="fas fa-bell text-white"></i>
-                                </div>
-                        <span class="text-sm text-white">Notification</span>
+                        </div>
+                        <span class="text-sm text-white">Notifications</span>
                     </a>
-                                </div>
-                            </div>
+                </div>
+            </div>
             </div>
         </div>
     </div>
@@ -286,10 +286,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load mood chart data
     function loadMoodChart() {
+        const periodLabel = document.getElementById('chartPeriodLabel');
+        const chartAdvice = document.getElementById('chartAdvice');
+        const chartAdviceText = document.getElementById('chartAdviceText');
+        
         fetch('{% url "core:mood_chart_data" %}')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Mood data received:', data); // Debug
                 if (data.moods && data.moods.length > 0) {
+                    // Update period label
+                    if (periodLabel) {
+                        periodLabel.textContent = `(${data.period_label})`;
+                    }
+                    
+                    // Show advice based on period
+                    if (chartAdvice && chartAdviceText) {
+                        chartAdvice.classList.remove('hidden');
+                        if (data.period === 'all_available') {
+                            chartAdviceText.textContent = `Showing your ${data.count} available mood logs. Log your mood daily for better trend insights!`;
+                        } else if (data.count < 7) {
+                            chartAdviceText.textContent = `You've logged ${data.count} mood entries this week. Keep logging daily for a complete picture!`;
+                        } else {
+                            chartAdviceText.textContent = `Great job! You've logged your mood ${data.count} times this week. Keep it up!`;
+                            chartAdvice.classList.remove('bg-blue-50', 'text-blue-600');
+                            chartAdvice.classList.add('bg-green-50', 'text-green-600');
+                        }
+                    }
+                    
                     renderMoodChart(data.moods);
                 } else {
                     showNoDataMessage();
@@ -311,8 +340,8 @@ document.addEventListener('DOMContentLoaded', function() {
         chartContainer.innerHTML = '';
         labelsContainer.innerHTML = '';
         
-        // Get last 7 days of data
-        const last7Days = moods.slice(-7);
+        // Show up to 10 entries for readability
+        const displayMoods = moods.slice(-10);
         
         // Emoji mapping
         const emojiMap = {
@@ -323,10 +352,11 @@ document.addEventListener('DOMContentLoaded', function() {
             5: { emoji: '😄', name: 'Very Happy' }
         };
         
-        last7Days.forEach((mood, index) => {
-            // Calculate bar height (mood value out of 5)
-            const heightPercentage = (mood.mood / maxMood) * 100;
-            const barHeight = Math.max(heightPercentage, 8); // Minimum 8% height
+        displayMoods.forEach((mood, index) => {
+            // Calculate bar height in pixels (mood 1-5 maps to 20-100px)
+            const maxBarHeight = 100; // max height in pixels
+            const minBarHeight = 20;  // min height in pixels
+            const barHeight = minBarHeight + ((mood.mood - 1) / 4) * (maxBarHeight - minBarHeight);
             
             // Get emoji and name for this mood
             const moodData = emojiMap[mood.mood];
@@ -341,20 +371,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 barColor = 'bg-red-500';
             }
             
-            // Create bar container
+            // Create bar container with fixed height for alignment
             const barContainer = document.createElement('div');
-            barContainer.className = 'flex flex-col items-center relative group';
+            barContainer.className = 'flex flex-col items-center justify-end relative group';
+            barContainer.style.height = '140px'; // Fixed container height
             
             // Create emoji display above bar
             const emojiDisplay = document.createElement('div');
-            emojiDisplay.className = 'text-2xl mb-2';
+            emojiDisplay.className = 'text-xl mb-1';
             emojiDisplay.textContent = moodData.emoji;
             
             // Create bar
             const bar = document.createElement('div');
-            bar.className = `${barColor} w-10 rounded-t transition-all duration-500 hover:opacity-80 cursor-pointer`;
-            bar.style.height = `${barHeight}%`;
-            bar.style.minHeight = '8px';
+            bar.className = `${barColor} w-8 rounded-t transition-all duration-500 hover:opacity-80 cursor-pointer`;
+            bar.style.height = `${barHeight}px`;
             
             // Create tooltip
             const tooltip = document.createElement('div');
@@ -378,9 +408,9 @@ document.addEventListener('DOMContentLoaded', function() {
             barContainer.appendChild(tooltip);
             chartContainer.appendChild(barContainer);
             
-            // Create label with emoji name
+            // Create label with date
             const label = document.createElement('span');
-            label.textContent = moodData.name;
+            label.textContent = mood.display_date || new Date(mood.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             label.className = 'text-center text-xs text-gray-600 mt-1 font-medium';
             labelsContainer.appendChild(label);
         });

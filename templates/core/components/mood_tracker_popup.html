@@ -103,11 +103,12 @@ let selectedMood = null;
 
 // Check if mood should be shown on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Only show for regular users (NOT admins/staff)
+    // Only show for regular users (NOT admins/staff/organizations)
     const isAdmin = {{ request.user.is_staff|lower }} || {{ request.user.is_superuser|lower }};
+    const isOrganization = '{{ request.user.role }}' === 'organization';
     
-    if (isAdmin) {
-        // Admins don't need to log mood - they only view/analyze data
+    if (isAdmin || isOrganization) {
+        // Admins and organizations don't need to log mood - they only view/analyze data
         return;
     }
     

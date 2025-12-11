@@ -169,5 +169,30 @@
         {% endif %}
     </div>
 </div>
+
+<style>
+    /* Fix dropdown styling for dark theme */
+    select {
+        appearance: auto;
+        -webkit-appearance: menulist;
+        -moz-appearance: menulist;
+        background-color: rgba(30, 41, 59, 0.95) !important;
+        color: white !important;
+    }
+    select option {
+        background-color: #1e293b !important;
+        color: white !important;
+        padding: 0.5rem;
+    }
+    select option:hover,
+    select option:checked {
+        background-color: #3b82f6 !important;
+        color: white !important;
+    }
+    /* Input styling */
+    input[type="text"] {
+        background-color: rgba(30, 41, 59, 0.95) !important;
+    }
+</style>
 {% endblock %}
 

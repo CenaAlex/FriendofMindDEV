@@ -9,7 +9,7 @@ class CustomUserCreationForm(UserCreationForm):
     birth_date = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}))
     phone = forms.CharField(max_length=15, required=False)
     gender = forms.ChoiceField(choices=User._meta.get_field('gender').choices, required=False)
-    role = forms.ChoiceField(choices=User.ROLE_CHOICES, initial='user')
+    role = forms.ChoiceField(choices=User.ROLE_CHOICES, initial='user', required=False)
     
     class Meta:
         model = User
@@ -20,6 +20,31 @@ class CustomUserCreationForm(UserCreationForm):
         super().__init__(*args, **kwargs)
         for field in self.fields:
             self.fields[field].widget.attrs.update({'class': 'form-input'})
+        # Make optional fields not required
+        self.fields['gender'].required = False
+        self.fields['birth_date'].required = False
+        self.fields['phone'].required = False
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email and User.objects.filter(email=email).exists():
+            raise forms.ValidationError('This email is already registered.')
+        return email
+    
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if username and User.objects.filter(username=username).exists():
+            raise forms.ValidationError('This username is already taken.')
+        return username
+    
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        # Set default role if not provided
+        if not user.role:
+            user.role = 'user'
+        if commit:
+            user.save()
+        return user
 
 class OrganizationRegistrationForm(UserCreationForm):
     email = forms.EmailField(required=True)

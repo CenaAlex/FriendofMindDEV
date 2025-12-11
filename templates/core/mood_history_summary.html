@@ -133,6 +133,32 @@
             </div>
         </div>
 
+        <!-- Monthly Mood Chart -->
+        {% if total_entries > 0 %}
+        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold text-white mb-6">
+                <i class="fas fa-chart-line mr-2"></i>Monthly Mood Chart
+            </h2>
+            <div class="relative" style="height: 300px;">
+                <canvas id="moodChart"></canvas>
+            </div>
+            <div class="flex justify-center gap-6 mt-4 flex-wrap">
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 rounded-full bg-green-500"></div>
+                    <span class="text-gray-300 text-sm">Happy / Very Happy</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 rounded-full bg-blue-500"></div>
+                    <span class="text-gray-300 text-sm">Neutral</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 rounded-full bg-red-500"></div>
+                    <span class="text-gray-300 text-sm">Sad / Very Sad</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Mood Distribution -->
         <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-6 mb-6">
             <h2 class="text-2xl font-bold text-white mb-6">
@@ -295,5 +321,96 @@
         </div>
     </div>
 </div>
+
+<!-- Chart.js for Monthly Mood Chart -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('moodChart');
+    if (ctx) {
+        const chartLabels = {{ chart_labels|safe }};
+        const chartData = {{ chart_data|safe }};
+        const chartColors = {{ chart_colors|safe }};
+        
+        // Mood emojis for y-axis
+        const moodEmojis = ['😢', '😔', '😐', '😊', '😄'];
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Mood Level',
+                    data: chartData,
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 8,
+                    pointHoverRadius: 12,
+                    pointBackgroundColor: chartColors,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        padding: 12,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                const moods = ['Very Sad', 'Sad', 'Neutral', 'Happy', 'Very Happy'];
+                                return moodEmojis[context.raw - 1] + ' ' + moods[context.raw - 1];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        min: 1,
+                        max: 5,
+                        ticks: {
+                            stepSize: 1,
+                            color: '#9ca3af',
+                            font: { size: 14 },
+                            callback: function(value) {
+                                return moodEmojis[value - 1] || '';
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#9ca3af',
+                            font: { size: 11 },
+                            maxRotation: 45,
+                            minRotation: 0
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)'
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
 

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load core_filters %}
 
 {% block title %}Report Comment{% endblock %}
 
@@ -10,7 +11,7 @@
             <p class="text-gray-300 mb-6">Help us maintain a safe and supportive community.</p>
             
             <div class="bg-gray-800 rounded-lg p-4 mb-6">
-                <p class="text-sm text-gray-400 mb-2">Comment by {{ comment.author.username }}</p>
+                <p class="text-sm text-gray-400 mb-2">Comment by {{ comment|anonymous_id }}</p>
                 <p class="text-gray-200">{{ comment.content|truncatewords:50 }}</p>
             </div>
             

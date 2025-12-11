@@ -58,6 +58,11 @@ class AdminDashboardView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
         context['total_mood_entries'] = MoodEntry.objects.count()
         context['recent_mood_entries'] = MoodEntry.objects.filter(date__gte=thirty_days_ago).count()
         
+        # Average mood score
+        from django.db.models import Avg
+        avg_mood = MoodEntry.objects.aggregate(avg_mood=Avg('mood'))['avg_mood']
+        context['average_mood'] = round(avg_mood, 2) if avg_mood else 0
+        
         # Critical cases that need attention
         severe_results = AssessmentResult.objects.filter(
             severity_level__in=['moderately_severe', 'severe']
